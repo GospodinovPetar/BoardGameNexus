@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ game.title }} Details - BoardGame Nexus{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card shadow-sm mb-4">
+                {% if game.image_url %}
+                    <img src="{{ game.image_url }}" class="card-img-top img-fluid" alt="{{ game.title }}" style="max-height: 400px; object-fit: cover;">
+                {% else %}
+                    <img src="{% static 'images/placeholder_game.png' %}" class="card-img-top img-fluid" alt="No image available for {{ game.title }}" style="max-height: 400px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <h1 class="card-title text-center">{{ game.title }}</h1>
+                    <hr>
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item"><strong>Genre:</strong> {{ game.genre.name }}</li>
+                        <li class="list-group-item"><strong>Players:</strong> {{ game.min_players }} - {{ game.max_players }}</li>
+                        <li class="list-group-item"><strong>Rating:</strong> {{ game.rating }} / 5.0</li>
+                        {% if game.release_date %}
+                            <li class="list-group-item"><strong>Release Date:</strong> {{ game.release_date|date:"M d, Y" }}</li>
+                        {% endif %}
+                    </ul>
+                    <h5 class="card-subtitle mb-2 text-muted">Description:</h5>
+                    <p class="card-text">{{ game.description }}</p>
+                    <div class="text-center mt-4">
+                        <a href={% url 'games:games' %} class="btn btn-secondary">Обратно в каталога</a>
+                        <a href="#" class="btn btn-primary">Създай събитие с тази игра</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
