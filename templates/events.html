@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Събития{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Събития</h1>
+        <a href={% url 'events:add_event' %} class="btn btn-success">Създай събитие</a>
+    </div>
+
+    {% if events %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for event in events %}
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title text-primary text-center">{{ event.name }}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">{{ event.date|date:"F d, Y P" }}</h6>
+                    <p class="card-text text-muted text-center flex-grow-1">Организирано от: {{ event.organizer_name }}</p>
+                    <p class="card-text text-muted text-center flex-grow-1">{{ event.description|truncatechars:150 }}</p>
+                    <p class="card-text text-muted text-center flex-grow-1">{{ event.current_players }} / {{ event.max_players }}</p>
+                    <div class="mt-auto text-center">
+                        <a href="{% url 'events:join' event.pk %}" class="btn btn-primary btn-sm me-2">Присъедини се</a>
+                        <a href="{% url 'events:event_detail' event.pk %}" class="btn btn-outline-info btn-sm">Детайли</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        За сега няма събития, организирай ти едно :)
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

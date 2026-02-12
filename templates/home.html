@@ -11,7 +11,7 @@
     <img src="{% static 'images/main_logo.jpg' %}" alt="BoardGame Nexus Logo" class="mb-4" style="height: 150px;">
     <div class="d-grid gap-2 col-6 mx-auto">
         <a class="btn btn-primary btn-lg" href={% url 'games:games' %}>Игри</a>
-        <a href="#" class="btn btn-secondary btn-lg">Събития</a>
+        <a class="btn btn-secondary btn-lg" href={% url 'events:events_list' %}>Събития</a>
     </div>
 </div>
 {% endblock %}

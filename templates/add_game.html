@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load crispy_forms_tags %}
 {% load static %}
 
 {% block title %}Добави игра{% endblock %}
@@ -10,15 +11,7 @@
         <div class="col-md-8">
             <form method="post" class="card p-4 shadow-sm">
                 {% csrf_token %}
-                {% for field in form %}
-                    <div class="mb-3">
-                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.errors %}
-                            <div class="alert alert-danger mt-1">{{ field.errors }}</div>
-                        {% endif %}
-                    </div>
-                {% endfor %}
+                {{ form|crispy }}
                 <div class="d-flex justify-content-between mt-4">
                     <button type="submit" class="btn btn-primary">Добави</button>
                     <a href="{% url 'games:games' %}" class="btn btn-secondary">Отказ</a>

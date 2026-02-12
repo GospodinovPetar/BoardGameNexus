@@ -23,6 +23,8 @@ PROJECT_APPS = [
 ]
 
 INSTALLED_APPS = [
+    'crispy_forms',
+    'crispy_bootstrap5',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -61,6 +63,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "BoardGameNexus.wsgi.application"
 
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases

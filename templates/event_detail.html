@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ event.name }} Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h1 class="card-title text-primary">{{ event.name }}</h1>
+            <h4 class="card-subtitle mb-3 text-muted">{{ event.date_time|date:"F d, Y P" }}</h4>
+            <p class="card-text"><strong>Organizer:</strong> {{ event.organizer_name }}</p>
+            <p class="card-text"><strong>Location:</strong> {{ event.location }}</p>
+            <p class="card-text"><strong>Players:</strong> {{ event.current_players }} / {{ event.max_players }}</p>
+
+            <h5 class="mt-4">Description:</h5>
+            <p class="card-text">{{ event.description }}</p>
+
+            {% if event.games.all %}
+            <h5 class="mt-4">Games to be played:</h5>
+            <ul>
+                {% for game in event.games.all %}
+                <li>{{ game.title }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            <div class="mt-4">
+                <a href="{% url 'events:join' event.pk %}" class="btn btn-primary me-2">Join Event</a>
+                <a href="{% url 'events:events_list' %}" class="btn btn-outline-secondary">Back to Events</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

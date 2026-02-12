@@ -25,16 +25,6 @@ class AddGameForm(forms.ModelForm):
             'description',
             'image_url',
         ]
-        widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Game Title'}),
-            'genre': forms.Select(attrs={'class': 'form-control'}),
-            'release_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'rating': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1', 'min': '0', 'max': '10'}),
-            'min_players': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
-            'max_players': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': '5', 'placeholder': 'Game Description'}),
-            'image_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Image URL (optional)'}),
-        }
         labels = {
             'title': 'Заглавие',
             'genre': 'Жанр',
