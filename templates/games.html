@@ -1,54 +1,135 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}All Games{% endblock %}
+{% block title %}Всички Игри - BoardGame Nexus{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Custom styles for games page */
+    .game-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        border: 1px solid var(--bs-gray-800); /* Subtle border for definition in dark mode */
+        border-radius: 12px; /* Slightly more rounded corners */
+        overflow: hidden; /* Ensure image corners match card */
+    }
+    .game-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 0.5rem 1rem rgba(0, 255, 255, 0.2) !important; /* Cyan glow on hover */
+    }
+    .game-card-img {
+        height: 250px; /* Make images a bit larger */
+        object-fit: cover;
+        transition: transform 0.3s ease-in-out;
+    }
+    .game-card:hover .game-card-img {
+        transform: scale(1.05); /* Slight zoom on image hover */
+    }
+    .game-card-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: var(--bs-primary); /* Use primary color for titles */
+    }
+    .game-card-info span {
+        display: block; /* Each info item on new line */
+        margin-bottom: 5px;
+    }
+    .game-card-info i {
+        margin-right: 8px;
+        color: var(--bs-info); /* Icons in info color */
+    }
+    .btn-view-details {
+        background-image: linear-gradient(to right, #00BFFF 0%, #00FFFF 100%); /* Blue-cyan gradient */
+        border: none;
+        color: white;
+        text-transform: uppercase;
+        font-weight: bold;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+    }
+    .btn-view-details:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4); /* Stronger glow on button hover */
+    }
+    .search-form-container {
+        background-color: var(--bs-gray-900); /* Darker background for the form area */
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    .search-input {
+        border: 1px solid var(--bs-primary);
+        background-color: var(--bs-gray-800);
+        color: var(--bs-white);
+    }
+    .search-input::placeholder {
+        color: var(--bs-gray-500);
+    }
+    .search-button, .add-game-button {
+        transition: all 0.2s ease;
+    }
+    .search-button:hover, .add-game-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 3px 8px rgba(0, 255, 255, 0.3);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row mb-4 justify-content-center"> {# Center the row content #}
-        <div class="col-md-8"> {# Adjust column width for better centering #}
-            <form method="GET" action="{% url 'games:games' %}" class="d-flex justify-content-center"> {# Center the form itself #}
-                <div class="input-group">
+<div class="container py-4">
+    <div class="row mb-5 justify-content-center">
+        <div class="col-lg-8 search-form-container">
+            <form method="GET" action="{% url 'games:games' %}" class="d-flex align-items-center justify-content-center flex-wrap gap-2">
+                <div class="input-group flex-grow-1 align-items-center">
+                    <button class="btn btn-primary search-button" type="submit"><i class="bi bi-search"></i></button>
                     {{ form.search_query }}
-                    <button class="btn btn-outline-secondary" type="submit">Търси</button>
-                    <a class="btn btn-primary ms-2" href="{% url 'games:add_game' %}">Добави игра</a> {# Added ms-2 for margin-left #}
+                    <a class="btn btn-outline-success add-game-button" href="{% url 'games:add_game' %}">
+                    <i class="bi bi-plus-circle me-2"></i> Добави игра
+                </a>
                 </div>
             </form>
         </div>
     </div>
-    <h2 class="mb-4 text-center">Нашите игри</h2>
+    
+    <h2 class="mb-4 text-center text-white-75">Всички Игри</h2>
 
     {% if not games %}
-    <div class="text-center my-5">
+    <div class="text-center my-5 p-4 bg-dark rounded-3 shadow">
         {% if form.search_query.value %}
-            <p class="lead">Нямаме игра с такова име</p>
-            <a class="btn btn-primary btn-lg mt-3" href="{% url 'games:games' %}">Обратно към всички игри</a>
+            <p class="lead text-white-50">Няма намерени игри с такова име...</p>
+            <a class="btn btn-outline-primary btn-lg mt-3" href="{% url 'games:games' %}">
+                <i class="bi bi-arrow-left me-2"></i> Обратно към всички игри
+            </a>
         {% else %}
-            <p class="lead">Все още нямаме добавени игри</p>
-            <a class="btn btn-primary btn-lg mt-3" href="{% url 'games:add_game' %}">Добави първата</a>
+            <p class="lead text-white-50">Все още няма добавени игри в BoardGame Nexus.</p>
+            <a class="btn btn-success btn-lg mt-3" href="{% url 'games:add_game' %}">
+                <i class="bi bi-controller me-2"></i> Добави първата игра!
+            </a>
         {% endif %}
     </div>
     {% else %}
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {% for game in games %}
         <div class="col">
-            <div class="card h-100 shadow-sm">
+            <div class="card bg-dark text-white game-card h-100">
                 <a href="{% url 'games:game_details' game.pk %}">
                     {% if game.image_url %}
-                        <img src="{{ game.image_url }}" class="card-img-top" alt="{{ game.title }}" style="height: 200px; object-fit: cover;">
+                        <img src="{{ game.image_url }}" class="card-img-top game-card-img" alt="{{ game.title }}">
                     {% else %}
-                        <img src="{% static 'images/placeholder_game.png' %}" class="card-img-top" alt="No image available for {{ game.title }}" style="height: 200px; object-fit: cover;">
+                        <img src="{% static 'images/placeholder_game.png' %}" class="card-img-top game-card-img" alt="Няма налично изображение за {{ game.title }}">
                     {% endif %}
                 </a>
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title text-center">{{ game.title }}</h5>
-                    <p class="card-text text-muted text-center flex-grow-1">
-                        Genre: {{ game.genre.name }}<br>
-                        Players: {{ game.min_players }}-{{ game.max_players }}<br>
-                        Rating: {{ game.rating }} / 5
-                    </p>
-                    <div class="mt-auto text-center">
-                        <a href="{% url 'games:game_details' game.pk %}" class="btn btn-primary btn-sm">View Details</a>
+                <div class="card-body d-flex flex-column text-center">
+                    <h5 class="game-card-title mb-3">{{ game.title }}</h5>
+                    <div class="game-card-info flex-grow-1 mb-3">
+                        <span><i class="bi bi-tag-fill"></i> Жанр: {{ game.genre.name }}</span>
+                        <span><i class="bi bi-people-fill"></i> Играчи: {{ game.min_players }}-{{ game.max_players }}</span>
+                        <span>
+                            <i class="bi bi-star-fill"></i> Рейтинг: {{ game.rating }} / 10
+                            {% if game.rating > 8 %} <span class="badge bg-warning text-dark ms-2">Топ!</span>{% endif %}
+                        </span>
+                    </div>
+                    <div class="mt-auto">
+                        <a href="{% url 'games:game_details' game.pk %}" class="btn btn-view-details w-100">Детайли</a>
                     </div>
                 </div>
             </div>

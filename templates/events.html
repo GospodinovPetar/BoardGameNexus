@@ -1,29 +1,120 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Събития{% endblock %}
+{% block title %}Събития - BoardGame Nexus{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Custom styles for events page */
+    .event-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        border: 1px solid var(--bs-gray-800); /* Subtle border for definition in dark mode */
+        border-radius: 12px; /* Slightly more rounded corners */
+        overflow: hidden;
+        background-color: var(--bs-gray-900); /* Darker background for cards */
+    }
+    .event-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 0.5rem 1rem rgba(255, 165, 0, 0.2) !important; /* Orange glow on hover */
+    }
+    .event-card-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: var(--bs-warning); /* Use warning color for event titles */
+    }
+    .event-card-info span {
+        display: block; /* Each info item on new line */
+        margin-bottom: 5px;
+    }
+    .event-card-info i {
+        margin-right: 8px;
+        color: var(--bs-info); /* Icons in info color */
+    }
+    .btn-create-event {
+        background-image: linear-gradient(to right, #FF8C00 0%, #FFA500 100%); /* Orange gradient */
+        border: none;
+        color: white;
+        text-transform: uppercase;
+        font-weight: bold;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+    }
+    .btn-create-event:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255, 165, 0, 0.4); /* Stronger glow on button hover */
+    }
+    .btn-join-event {
+        background-color: var(--bs-success); /* Green for join */
+        border-color: var(--bs-success);
+        color: white;
+        transition: all 0.2s ease;
+    }
+    .btn-join-event:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 3px 8px rgba(40, 167, 69, 0.3);
+    }
+    .btn-event-details {
+        background-color: var(--bs-info); /* Blue for details */
+        border-color: var(--bs-info);
+        color: white;
+        transition: all 0.2s ease;
+    }
+    .btn-event-details:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 3px 8px rgba(23, 162, 184, 0.3);
+    }
+    .empty-events-message {
+        background-color: var(--bs-gray-900);
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    .progress-bar-players {
+        height: 10px; /* Thinner progress bar */
+        font-size: 0.7rem;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="mb-0">Събития</h1>
-        <a href={% url 'events:add_event' %} class="btn btn-success">Създай събитие</a>
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
+        <h1 class="mb-0 text-white-75">Предстоящи Събития</h1>
+        <a href="{% url 'events:add_event' %}" class="btn btn-create-event btn-lg">
+            <i class="bi bi-calendar-plus me-2"></i> Създай Ново Събитие
+        </a>
     </div>
 
     {% if events %}
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {% for event in events %}
         <div class="col">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title text-primary text-center">{{ event.name }}</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">{{ event.date|date:"F d, Y P" }}</h6>
-                    <p class="card-text text-muted text-center flex-grow-1">Организирано от: {{ event.organizer_name }}</p>
-                    <p class="card-text text-muted text-center flex-grow-1">{{ event.description|truncatechars:150 }}</p>
-                    <p class="card-text text-muted text-center flex-grow-1">{{ event.current_players }} / {{ event.max_players }}</p>
-                    <div class="mt-auto text-center">
-                        <a href="{% url 'events:join' event.pk %}" class="btn btn-primary btn-sm me-2">Присъедини се</a>
-                        <a href="{% url 'events:event_detail' event.pk %}" class="btn btn-outline-info btn-sm">Детайли</a>
+            <div class="card event-card h-100">
+                <div class="card-body d-flex flex-column text-center">
+                    <h5 class="event-card-title mb-3">{{ event.name }}</h5>
+                    <div class="event-card-info flex-grow-1 mb-3">
+                        <span><i class="bi bi-calendar-date"></i> Дата: {{ event.date_time|date:"d M Y" }}</span>
+                        <span><i class="bi bi-clock"></i> Час: {{ event.date_time|date:"H:i" }}</span>
+                        {% if event.games.all %}
+                            <span><i class="bi bi-controller"></i> Игри: {{ event.games.all|join:", " }}</span>
+                        {% endif %}
+                        <div class="mt-3">
+                            <i class="bi bi-people-fill"></i> Играчи: <strong>{{ event.current_players }}</strong> / {{ event.max_players }}
+                            <div class="progress mt-1" style="height: 15px;">
+                                {% widthratio event.current_players event.max_players 100 as percentage %}
+                                <div class="progress-bar bg-info progress-bar-striped" role="progressbar" style="width: {{ percentage }}%;" aria-valuenow="{{ event.current_players }}" aria-valuemin="0" aria-valuemax="{{ event.max_players }}">
+                                    {% if percentage > 0 %}{{ percentage|floatformat:0 }}%{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="card-text text-white-50 text-truncate mb-3">{{ event.description|default:"Няма налично описание." }}</p>
+                    <div class="mt-auto d-flex justify-content-around">
+                        <a href="{% url 'events:join' event.pk %}" class="btn btn-join-event btn-sm w-45">
+                            <i class="bi bi-box-arrow-in-right me-2"></i> Присъедини се
+                        </a>
+                        <a href="{% url 'events:event_detail' event.pk %}" class="btn btn-event-details btn-sm w-45">
+                            <i class="bi bi-info-circle me-2"></i> Детайли
+                        </a>
                     </div>
                 </div>
             </div>
@@ -31,8 +122,11 @@
         {% endfor %}
     </div>
     {% else %}
-    <div class="alert alert-info" role="alert">
-        За сега няма събития, организирай ти едно :)
+    <div class="text-center my-5 p-4 empty-events-message">
+        <p class="lead text-white-50 mb-3">За сега няма активни събития. Бъди пръв!</p>
+        <a class="btn btn-create-event btn-lg" href="{% url 'events:add_event' %}">
+            <i class="bi bi-calendar-plus me-2"></i> Създай Първото Събитие
+        </a>
     </div>
     {% endif %}
 </div>

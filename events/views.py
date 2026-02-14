@@ -30,7 +30,7 @@ def join_event(request, pk):
     joined_events = request.session.get('joined_events', [])
 
     if pk in joined_events:
-        messages.warning(request, "Вече сте се записали за това събитие!")
+        messages.warning(request, "Вече сте се записали за това събитие!") # Не се показват?
         return redirect('events:events_list')
 
     if event.current_players < event.max_players:
@@ -40,9 +40,9 @@ def join_event(request, pk):
         joined_events.append(pk)
         request.session['joined_events'] = joined_events
 
-        messages.success(request, f"Успешно се присъединихте към {event.name}!")
+        messages.success(request, f"Успешно се присъединихте към {event.name}!") # Не се показват?
     else:
-        messages.error(request, "Съжаляваме, местата са запълнени.")
+        messages.error(request, "Съжаляваме, местата са запълнени.") # Не се показват?
 
     return redirect('events:events_list')
 

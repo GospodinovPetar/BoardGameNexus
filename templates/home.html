@@ -3,15 +3,42 @@
 
 {% block title %}BoardGame Nexus - Home{% endblock %}
 {% block nav %}
+    {{ block.super }}
 {% endblock %}
 
 {% block content %}
-<div class="container text-center py-5">
-    <!-- Logo Placeholder - pulled from base.html, but if a different one is needed here, it would go below -->
-    <img src="{% static 'images/main_logo.jpg' %}" alt="BoardGame Nexus Logo" class="mb-4" style="height: 150px;">
-    <div class="d-grid gap-2 col-6 mx-auto">
-        <a class="btn btn-primary btn-lg" href={% url 'games:games' %}>Игри</a>
-        <a class="btn btn-secondary btn-lg" href={% url 'events:events_list' %}>Събития</a>
+<div class="container-fluid vh-40 d-flex flex-column justify-content-center align-items-center">
+    <!-- Main Content Area centered and filling viewport -->
+    <div class="row w-100 justify-content-center my-auto">
+        <div class="col-lg-10 col-md-11">
+            <div class="p-4 rounded-4 shadow-lg bg-dark border border-secondary">
+                <img class="d-block mx-auto mb-3 img-fluid" src="{% static 'images/main_logo.jpg' %}" alt="BoardGame Nexus Logo" style="max-height: 180px;">
+                <p class="lead mb-4 text-white-75 px-lg-5 text-center">Вашата централна точка за всичко свързано с настолните игри. Открийте нови светове, намерете събития и се свържете с други ентусиасти.</p>
+
+                <div class="d-flex flex-wrap justify-content-center gap-3 mb-5">
+                    <a class="btn btn-primary btn-lg px-5 py-3 text-uppercase fw-bold shadow" href="{% url 'games:games' %}">Разгледайте игрите</a>
+                    <a class="btn btn-outline-light btn-lg px-5 py-3 text-uppercase fw-bold shadow" href="{% url 'events:events_list' %}">Намерете събитие</a>
+                </div>
+                
+                <!-- Counts - more integrated and styled with icons -->
+                <div class="row justify-content-center g-3">
+                    <div class="col-md-5 col-sm-8">
+                        <div class="p-4 rounded-3 text-bg-info shadow-sm h-100 d-flex flex-column justify-content-center">
+                            <i class="bi bi-calendar-event display-5 mb-2"></i>
+                            <h3 class="fw-bold mb-1">{{ event_count }}</h3>
+                            <p class="lead mb-0">Активни събития</p>
+                        </div>
+                    </div>
+                    <div class="col-md-5 col-sm-8">
+                        <div class="p-4 rounded-3 text-bg-success shadow-sm h-100 d-flex flex-column justify-content-center">
+                            <i class="bi bi-controller display-5 mb-2"></i>
+                            <h3 class="fw-bold mb-1">{{ game_count }}</h3>
+                            <p class="lead mb-0">Налични игри</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
