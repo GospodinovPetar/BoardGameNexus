@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}404 - Страницата не е намерена{% endblock %}
+
+{% block content %}
+<div class="container-fluid text-center vh-50 d-flex flex-column justify-content-center align-items-center bg-dark text-white">
+    <div class="p-4 rounded-4 shadow-lg bg-dark border border-secondary">
+        <h1 class="display-1 fw-bold text-danger mb-3 animate__animated animate__shakeX">404</h1>
+        <h2 class="mb-4 text-warning">Грешка! Играта блокира...</h2>
+        <p class="lead mb-4 text-white-75 px-lg-5">Изглежда, че страницата, която търсите, е била изядена от дракон или просто не съществува. Може би сте попаднали на грешна карта?</p>
+
+        <a href="{% url 'web:index' %}" class="btn btn-primary btn-lg px-5 py-3 text-uppercase fw-bold shadow">
+            <i class="bi bi-house-door-fill me-2"></i> Върни се в базата
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<style>
+    .bg-dark {
+        background-color: #212529 !important; /* Ensure dark background */
+    }
+    .text-danger {
+        color: #dc3545 !important;
+    }
+    .text-warning {
+        color: #ffc107 !important;
+    }
+    .btn-primary {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    .btn-primary:hover {
+        background-color: #0b5ed7;
+        border-color: #0a58ca;
+    }
+</style>
+{% endblock %}

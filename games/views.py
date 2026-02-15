@@ -28,10 +28,13 @@ def get_game_details(request, pk):
     return render(request, 'game_detail.html', context)
 
 def add_game(request):
-    form = AddGameForm(request.POST)
-    if form.is_valid():
-        form.save()
-        return redirect('games:games')
+    if request.method == 'POST':
+        form = AddGameForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('games:games')
+    else: # GET request
+        form = AddGameForm() # Unbound form for initial display
 
     context = {'form': form}
 

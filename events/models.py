@@ -19,7 +19,6 @@ class Event(models.Model):
 
     organizer_name = models.CharField(
         max_length=100,
-        default='John Doe'
     )
 
     current_players = models.PositiveIntegerField(

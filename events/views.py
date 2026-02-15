@@ -48,10 +48,13 @@ def join_event(request, pk):
 
 
 def add_event(request):
-    form = CreateEventForm(request.POST)
-    if form.is_valid():
-        form.save()
-        return redirect('events:events_list')
+    if request.method == 'POST':
+        form = CreateEventForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('events:events_list')
+    else: # GET request
+        form = CreateEventForm() # Unbound form for initial display
 
     context = {'form': form}
     return render(request, 'add_event.html', context)
