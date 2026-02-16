@@ -124,8 +124,8 @@
                         <span><i class="bi bi-tag-fill"></i> Жанр: {{ game.genre.name }}</span>
                         <span><i class="bi bi-people-fill"></i> Играчи: {{ game.min_players }}-{{ game.max_players }}</span>
                         <span>
-                            <i class="bi bi-star-fill"></i> Рейтинг: {{ game.rating }} / 10
-                            {% if game.rating > 8 %} <span class="badge bg-warning text-dark ms-2">Топ!</span>{% endif %}
+                            <i class="bi bi-star-fill"></i> Рейтинг: {{ game.rating }} / 5.0
+                            {% if game.rating > 4.5 %} <span class="badge bg-warning text-dark ms-2">Топ!</span>{% endif %}
                         </span>
                     </div>
                     <div class="mt-auto">

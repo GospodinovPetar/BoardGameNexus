@@ -25,13 +25,11 @@ def event_detail(request, pk):
 def join_event(request, pk):
     event = get_object_or_404(Event, pk=pk)
 
-    # Използваме списък в сесията: 'joined_events' = [1, 5, 12]
+    # Използваме списък в сесията 'joined_events' = [1, 5, 12]
     joined_events = request.session.get("joined_events", [])
 
     if pk in joined_events:
-        messages.warning(
-            request, "Вече сте се записали за това събитие!"
-        )
+        messages.warning(request, "Вече сте се записали за това събитие!")
         return redirect("events:events_list")
 
     if event.current_players < event.max_players:
@@ -41,9 +39,7 @@ def join_event(request, pk):
         joined_events.append(pk)
         request.session["joined_events"] = joined_events
 
-        messages.success(
-            request, f"Успешно се присъединихте към {event.name}!"
-        )
+        messages.success(request, f"Успешно се присъединихте към {event.name}!")
     else:
         messages.error(request, "Съжаляваме, местата са запълнени.")
 
@@ -68,14 +64,13 @@ def add_event(request):
 
 
 def edit_event(request, pk):
-    event = Event.objects.get(pk=pk)
+    event = get_object_or_404(Event, pk=pk)
+
     if request.method == "POST":
         form = EventForm(request.POST, instance=event)
         if form.is_valid():
             form.save()
-            messages.success(
-                request, f"Успешно редактирахте {event.name}!"
-            )
+            messages.success(request, f"Успешно редактирахте {event.name}!")
             return redirect("events:event_detail", pk=pk)
     else:
         form = EventForm(instance=event)
@@ -93,13 +88,11 @@ def edit_event(request, pk):
 
 
 def delete_event(request, pk):
-    event = Event.objects.get(pk=pk)
+    event = get_object_or_404(Event, pk=pk)
 
     if request.method == "POST":
         event.delete()
-        messages.success(
-            request, f"Успешно изтрихте {event.name}!"
-        )
+        messages.success(request, f"Успешно изтрихте {event.name}!")
         return redirect("events:events_list")
     else:
         form = EventForm(instance=event)

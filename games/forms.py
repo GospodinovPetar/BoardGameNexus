@@ -11,7 +11,7 @@ class BoardGameSearchForm(forms.Form):
         label="",
         widget=forms.TextInput(
             attrs={
-                "placeholder": "Search by game title...",
+                "placeholder": "Търсене по заглавие на игра...",
                 "class": "form-control me-2",
             }
         ),

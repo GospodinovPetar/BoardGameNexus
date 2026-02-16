@@ -24,6 +24,7 @@ PROJECT_APPS = [
 
 INSTALLED_APPS = [
     "crispy_forms",
+    "jazzmin",
     "crispy_bootstrap5",
     "django.contrib.admin",
     "django.contrib.auth",

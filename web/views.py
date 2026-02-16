@@ -23,4 +23,3 @@ def mission(request):
         "game_count": game_count,
     }
     return render(request, "mission.html", context)
-

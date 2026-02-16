@@ -3,77 +3,7 @@
 
 {% block title %}Събития - BoardGame Nexus{% endblock %}
 
-{% block extra_css %}
-<style>
-    /* Custom styles for events page */
-    .event-card {
-        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-        border: 1px solid var(--bs-gray-800); /* Subtle border for definition in dark mode */
-        border-radius: 12px; /* Slightly more rounded corners */
-        overflow: hidden;
-        background-color: var(--bs-gray-900); /* Darker background for cards */
-    }
-    .event-card:hover {
-        transform: translateY(-5px) scale(1.02);
-        box-shadow: 0 0.5rem 1rem rgba(255, 165, 0, 0.2) !important; /* Orange glow on hover */
-    }
-    .event-card-title {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: var(--bs-warning); /* Use warning color for event titles */
-    }
-    .event-card-info span {
-        display: block; /* Each info item on new line */
-        margin-bottom: 5px;
-    }
-    .event-card-info i {
-        margin-right: 8px;
-        color: var(--bs-info); /* Icons in info color */
-    }
-    .btn-create-event {
-        background-image: linear-gradient(to right, #FF8C00 0%, #FFA500 100%); /* Orange gradient */
-        border: none;
-        color: white;
-        text-transform: uppercase;
-        font-weight: bold;
-        letter-spacing: 1px;
-        transition: all 0.3s ease;
-    }
-    .btn-create-event:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(255, 165, 0, 0.4); /* Stronger glow on button hover */
-    }
-    .btn-join-event {
-        background-color: var(--bs-success); /* Green for join */
-        border-color: var(--bs-success);
-        color: white;
-        transition: all 0.2s ease;
-    }
-    .btn-join-event:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 3px 8px rgba(40, 167, 69, 0.3);
-    }
-    .btn-event-details {
-        background-color: var(--bs-info); /* Blue for details */
-        border-color: var(--bs-info);
-        color: white;
-        transition: all 0.2s ease;
-    }
-    .btn-event-details:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 3px 8px rgba(23, 162, 184, 0.3);
-    }
-    .empty-events-message {
-        background-color: var(--bs-gray-900);
-        border-radius: 12px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    }
-    .progress-bar-players {
-        height: 10px; /* Thinner progress bar */
-        font-size: 0.7rem;
-    }
-</style>
-{% endblock %}
+{% block extra_css %}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -107,7 +37,6 @@
                             </div>
                         </div>
                     </div>
-                    <p class="card-text text-white-50 text-truncate mb-3">{{ event.description|default:"Няма налично описание." }}</p>
                     <div class="mt-auto d-flex justify-content-around">
                         <a href="{% url 'events:join' event.pk %}" class="btn btn-join-event btn-sm w-45">
                             <i class="bi bi-box-arrow-in-right me-2"></i> Присъедини се

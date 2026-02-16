@@ -12,7 +12,7 @@ class EventSearchForm(forms.Form):
         label="",
         widget=forms.TextInput(
             attrs={
-                "placeholder": "Search by event name...",
+                "placeholder": "Търсене по име на събитие...",
                 "class": "form-control me-2",
             }
         ),
