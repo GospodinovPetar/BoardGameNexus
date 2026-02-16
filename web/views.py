@@ -13,3 +13,14 @@ def index(request):
         "game_count": game_count,
     }
     return render(request, "home.html", context)
+
+
+def mission(request):
+    event_count = Event.objects.count()
+    game_count = BoardGame.objects.count()
+    context = {
+        "event_count": event_count,
+        "game_count": game_count,
+    }
+    return render(request, "mission.html", context)
+

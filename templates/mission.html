@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Нашата Мисия - BoardGame Nexus{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: var(--bs-body-bg);
+        color: var(--bs-body-color);
+    }
+    .mission-card {
+        background-color: var(--bs-tertiary-bg); /* Use a slightly lighter dark background for card */
+        border: 2px solid var(--bs-primary);
+        border-radius: 15px;
+        box-shadow: 0 0 25px rgba(var(--bs-primary-rgb), 0.4); /* Glowing effect with primary color */
+        padding: 40px;
+        text-align: center;
+    }
+    .mission-title {
+        color: var(--bs-info); /* Consistent info color for title */
+        font-size: 3.5rem;
+        font-weight: bold;
+        text-shadow: 0 0 10px rgba(var(--bs-info-rgb), 0.7), 0 0 20px rgba(var(--bs-info-rgb), 0.4); /* Glowing effect */
+        margin-bottom: 30px;
+    }
+    .mission-subtitle {
+        color: var(--bs-warning); /* Consistent warning color for subtitle */
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+    .mission-icon {
+        color: var(--bs-info); /* Consistent info color for icons */
+        font-size: 3rem;
+        margin-bottom: 20px;
+    }
+    .mission-text {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        max-width: 800px;
+        margin: 0 auto 30px auto;
+    }
+    .progress-section {
+        margin-top: 40px;
+    }
+    .progress-bar {
+        background-color: var(--bs-primary); /* Consistent primary color for progress bar */
+        box-shadow: 0 0 10px rgba(var(--bs-primary-rgb), 0.7); /* Glowing progress bar */
+    }
+    .card-mission-objective {
+        background-color: var(--bs-dark); /* Darker background for objective cards */
+        border: 1px solid var(--bs-info); /* Consistent info color for border */
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        text-align: left;
+    }
+    .objective-title {
+        color: var(--bs-warning); /* Consistent warning color */
+        font-weight: bold;
+        font-size: 1.3rem;
+        margin-bottom: 10px;
+    }
+    .objective-icon {
+        color: var(--bs-info); /* Consistent info color */
+        margin-right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="mission-card mx-auto">
+        <i class="bi bi-controller mission-icon"></i>
+        <h1 class="mission-title">Мисията на BoardGame Nexus</h1>
+        <p class="mission-subtitle">Свържи и завладей</p>
+
+        <p class="mission-text">
+            Добре дошли, авантюристи, в BoardGame Nexus – вашият портал към епичен свят на настолни стратегии и забавления! Нашата мисия е проста: да свържем любителите на настолни игри и да направим всяко хвърляне на зарове незабравимо преживяване.
+        </p>
+        <p class="mission-text">
+            Тук ще откриете нови игри, ще се присъедините към общности и ще участвате в легендарни събития с други стратези.
+        </p>
+
+        <div class="progress-section">
+            <h3 class="mission-subtitle">Цели на Мисията:</h3>
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card-mission-objective">
+                        <div class="objective-title"><i class="bi bi-people-fill objective-icon"></i> Създаване на Връзки</div>
+                        <p>Обединяване на играчи от всички нива, създавайки общност, където всеки намира своята идеална група за игри.</p>
+                        <div class="progress" role="progressbar" aria-label="Connections Progress" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100" style="height: 10px;">
+                            <div class="progress-bar" style="width: 80%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card-mission-objective">
+                        <div class="objective-title"><i class="bi bi-calendar-event objective-icon"></i> Откриване на Събития</div>
+                        <p>Лесно намиране и присъединяване към местни събирания, турнири и тематични вечери.</p>
+                        <div class="progress" role="progressbar" aria-label="Events Progress" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100" style="height: 10px;">
+                            <div class="progress-bar" style="width: 90%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card-mission-objective">
+                        <div class="objective-title"><i class="bi bi-controller objective-icon"></i> Разширяване на Арсенала</div>
+                        <p>Разглеждане на обширна база данни с настолни игри, с оценки, описания и брой играчи.</p>
+                        <div class="progress" role="progressbar" aria-label="Games Progress" aria-valuenow="75" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="height: 10px;">
+                            <div class="progress-bar" style="width: 75%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card-mission-objective">
+                        <div class="objective-title"><i class="bi bi-award objective-icon"></i> Подобряване на Преживяването</div>
+                        <p>Интуитивни инструменти за организиране на събития, проследяване на игри и общностно взаимодействие.</p>
+                        <div class="progress" role="progressbar" aria-label="Experience Progress" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100" style="height: 10px;">
+                            <div class="progress-bar" style="width: 85%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p class="mt-5 mission-subtitle">Присъединете се към Куеста!</p>
+        <a href="{% url 'games:games' %}" class="btn btn-lg btn-primary ms-3" style="box-shadow: 0 0 15px rgba(var(--bs-primary-rgb), 0.7);">
+            <i class="bi bi-grid-fill me-2"></i> Разгледай Игрите ({{ game_count }})
+        </a>
+        <a href="{% url 'events:events_list' %}" class="btn btn-lg btn-warning" style="box-shadow: 0 0 15px rgba(var(--bs-warning-rgb), 0.7);">
+            Виж Активни Събития ({{ event_count }}) <i class="bi bi-arrow-right-circle me-2"></i>
+        </a>
+
+    </div>
+</div>
+{% endblock %}

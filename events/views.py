@@ -31,7 +31,7 @@ def join_event(request, pk):
     if pk in joined_events:
         messages.warning(
             request, "Вече сте се записали за това събитие!"
-        )  # Не се показват?
+        )
         return redirect("events:events_list")
 
     if event.current_players < event.max_players:
@@ -43,9 +43,9 @@ def join_event(request, pk):
 
         messages.success(
             request, f"Успешно се присъединихте към {event.name}!"
-        )  # Не се показват?
+        )
     else:
-        messages.error(request, "Съжаляваме, местата са запълнени.")  # Не се показват?
+        messages.error(request, "Съжаляваме, местата са запълнени.")
 
     return redirect("events:events_list")
 
@@ -59,7 +59,11 @@ def add_event(request):
     else:  # GET request
         form = EventForm()
 
-    context = {"form": form}
+    context = {
+        "form": form,
+        "button_text": "Създай",
+        "page_title": f"Създаване на събитие",
+    }
     return render(request, "event.html", context)
 
 
@@ -69,6 +73,9 @@ def edit_event(request, pk):
         form = EventForm(request.POST, instance=event)
         if form.is_valid():
             form.save()
+            messages.success(
+                request, f"Успешно редактирахте {event.name}!"
+            )
             return redirect("events:event_detail", pk=pk)
     else:
         form = EventForm(instance=event)
@@ -90,6 +97,9 @@ def delete_event(request, pk):
 
     if request.method == "POST":
         event.delete()
+        messages.success(
+            request, f"Успешно изтрихте {event.name}!"
+        )
         return redirect("events:events_list")
     else:
         form = EventForm(instance=event)
