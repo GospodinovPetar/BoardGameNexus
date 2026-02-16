@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">{{ page_title }}</h2>
+
+    {% if delete %}
+        <div class="alert alert-danger text-center" role="alert">
+            {{ confirm_message }}
+        </div>
+    {% endif %}
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <form method="post" class="card p-4 shadow-sm" action="{% if form_action_url %}{{ form_action_url }}{% endif %}">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <div class="d-flex justify-content-between mt-4">
+                    {% if delete or edit %}
+                        <a href="{% url 'games:game_details' game.pk %}" class="btn btn-secondary">Отказ</a>
+                    {% else %}
+                        <a href="{% url 'games:games'%}" class="btn btn-secondary">Отказ</a>
+                    {% endif %}
+                    <button type="submit" class="btn {% if delete %}btn-danger{% else %}btn-primary{% endif %}">{{ button_text }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

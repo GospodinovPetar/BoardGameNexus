@@ -59,6 +59,7 @@
         letter-spacing: 1px;
         transition: all 0.3s ease;
         padding: 12px 30px;
+        font-size: 0.9em; /* Smaller font size for join button */
     }
     .btn-join-event-lg:hover {
         transform: translateY(-3px);
@@ -91,6 +92,31 @@
         display: flex;
         align-items: center;
         gap: 10px;
+    }
+    .btn-action-primary {
+        background-image: linear-gradient(to right, #28a745 0%, #20c997 100%); /* Green gradient for primary action */
+        border: none;
+        color: white;
+        text-transform: uppercase;
+        font-weight: bold;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        padding: 12px 30px;
+    }
+    .btn-action-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
+    }
+    .btn-action-uniform {
+        height: 50px; /* Fixed height */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 0 15px; /* Adjust horizontal padding to control internal spacing */
+        white-space: nowrap; /* Prevent text from wrapping */
+        overflow: hidden; /* Hide overflowing text */
+        text-overflow: ellipsis; /* Add ellipsis for overflowing text */
     }
 </style>
 {% endblock %}
@@ -145,13 +171,29 @@
             </div>
             {% endif %}
 
-            <div class="mt-4 pt-3 d-flex flex-wrap justify-content-center gap-3 border-top border-secondary">
-                <a href="{% url 'events:join' event.pk %}" class="btn btn-join-event-lg">
-                    <i class="bi bi-box-arrow-in-right me-2"></i> Присъедини се
-                </a>
-                <a href="{% url 'events:events_list' %}" class="btn btn-back-events">
-                    <i class="bi bi-arrow-left me-2"></i> Обратно към събитията
-                </a>
+            <div class="mt-4 pt-3 p-4 border-top border-secondary">
+                <div class="row row-cols-1 row-cols-md-4 g-3">
+                    <div class="col">
+                        <a href="{% url 'events:events_list' %}" class="btn btn-back-events btn-action-uniform w-100">
+                            <i class="bi bi-arrow-left me-2"></i> Обратно
+                        </a>
+                    </div>
+                    <div class="col">
+                        <a href="{% url 'events:join' event.pk %}" class="btn btn-join-event-lg btn-action-uniform w-100">
+                            <i class="bi bi-box-arrow-in-right me-2"></i> Присъедини се
+                        </a>
+                    </div>
+                    <div class="col">
+                        <a href="{% url 'events:edit_event' event.pk %}" class="btn btn-action-primary btn-action-uniform w-100">
+                            <i class="bi bi-pencil me-2"></i> Редактирай
+                        </a>
+                    </div>
+                    <div class="col">
+                        <a href="{% url 'events:delete_event' event.pk %}" class="btn btn-danger btn-action-uniform w-100">
+                            <i class="bi bi-trash me-2"></i> Изтрий
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

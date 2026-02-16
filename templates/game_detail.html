@@ -79,6 +79,18 @@
         transform: translateY(-2px);
         box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
     }
+    .btn-action-uniform {
+        height: 50px; /* Fixed height */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 0 15px; /* Adjust horizontal padding to control internal spacing */
+        white-space: nowrap; /* Prevent text from wrapping */
+        overflow: hidden; /* Hide overflowing text */
+        text-overflow: ellipsis; /* Add ellipsis for overflowing text */
+    }
+
 </style>
 {% endblock %}
 
@@ -97,7 +109,7 @@
                 <div class="card-body p-4 text-center">
                     <h1 class="game-detail-title mb-4">{{ game.title }}</h1>
                     <hr class="text-primary mx-auto w-75 mb-4">
-                    
+
                     <ul class="list-group list-group-flush game-info-list mb-4">
                         <li class="list-group-item text-start">
                             <i class="bi bi-controller"></i> <strong>Жанр:</strong> {{ game.genre.name }}
@@ -105,9 +117,20 @@
                         <li class="list-group-item text-start">
                             <i class="bi bi-people-fill"></i> <strong>Играчи:</strong> {{ game.min_players }} - {{ game.max_players }}
                         </li>
-                        <li class="list-group-item text-start">
-                            <i class="bi bi-star-fill"></i> <strong>Рейтинг:</strong> {{ game.rating }} / 10
-                            {% if game.rating > 8 %} <span class="badge bg-warning text-dark ms-2">Топ Игра!</span>{% endif %}
+                        <li class="list-group-item text-start d-flex flex-column">
+                            <div>
+                                <i class="bi bi-star-fill"></i> <strong>Рейтинг:</strong>
+                                <span class="ms-2 d-inline-block" style="font-size: 1.2rem;">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= game.rating %}
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                        {% else %}
+                                            <i class="bi bi-star text-secondary"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                ({{ game.rating|floatformat:1 }} / 5.0)
+                                </span>
+                            </div>
                         </li>
                         {% if game.release_date %}
                             <li class="list-group-item text-start">
@@ -121,14 +144,31 @@
                         {{ game.description|default:"Няма налично описание за тази игра." }}
                     </p>
                     
-                    <div class="mt-4 pt-3 d-flex flex-wrap justify-content-center gap-3 border-top border-secondary">
-                        <a href="{% url 'games:games' %}" class="btn btn-action-secondary">
-                            <i class="bi bi-arrow-left me-2"></i> Обратно към игрите
-                        </a>
-                        <a href="#" class="btn btn-action-primary">
-                            <i class="bi bi-calendar-plus me-2"></i> Създай събитие с тази игра
-                        </a>
-                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="mt-4 pt-3 p-4 border-top border-secondary">
+            <div class="row row-cols-1 row-cols-md-4 g-3">
+                <div class="col">
+                    <a href="{% url 'games:games' %}" class="btn btn-action-secondary btn-action-uniform w-100">
+                        <i class="bi bi-arrow-left me-2"></i> Обратно към игрите
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="#" class="btn btn-primary btn-action-uniform w-100">
+                        <i class="bi bi-calendar-plus me-2"></i> Създай събитие
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="{% url 'games:edit_game' game.pk %}" class="btn btn-action-primary btn-action-uniform w-100">
+                        <i class="bi bi-pencil me-2"></i> Редактирай игра
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="{% url 'games:delete_game' game.pk %}" class="btn btn-danger btn-action-uniform w-100">
+                        <i class="bi bi-trash me-2"></i> Изтрий
+                    </a>
                 </div>
             </div>
         </div>

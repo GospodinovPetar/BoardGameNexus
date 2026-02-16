@@ -17,14 +17,14 @@ ALLOWED_HOSTS = []
 
 
 PROJECT_APPS = [
-    'events',
-    'games',
-    'web',
+    "events",
+    "games",
+    "web",
 ]
 
 INSTALLED_APPS = [
-    'crispy_forms',
-    'crispy_bootstrap5',
+    "crispy_forms",
+    "crispy_bootstrap5",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -48,8 +48,7 @@ ROOT_URLCONF = "BoardGameNexus.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / 'templates']
-        ,
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -117,7 +116,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "staticfiles" # Use 'staticfiles' for collected files
+STATIC_ROOT = BASE_DIR / "staticfiles"  # Use 'staticfiles' for collected files
 STATICFILES_DIRS = [
-    BASE_DIR / "static", # This is where you put your project-wide static files
+    BASE_DIR / "static",  # This is where you put your project-wide static files
 ]

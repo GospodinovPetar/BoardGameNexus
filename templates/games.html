@@ -81,7 +81,7 @@
             <form method="GET" action="{% url 'games:games' %}" class="d-flex align-items-center justify-content-center flex-wrap gap-2">
                 <div class="input-group flex-grow-1 align-items-center">
                     <button class="btn btn-primary search-button" type="submit"><i class="bi bi-search"></i></button>
-                    {{ form.search_query }}
+                    {{ form.title }}
                     <a class="btn btn-outline-success add-game-button" href="{% url 'games:add_game' %}">
                     <i class="bi bi-plus-circle me-2"></i> Добави игра
                 </a>
@@ -94,7 +94,7 @@
 
     {% if not games %}
     <div class="text-center my-5 p-4 bg-dark rounded-3 shadow">
-        {% if form.search_query.value %}
+        {% if form.title.value %}
             <p class="lead text-white-50">Няма намерени игри с такова име...</p>
             <a class="btn btn-outline-primary btn-lg mt-3" href="{% url 'games:games' %}">
                 <i class="bi bi-arrow-left me-2"></i> Обратно към всички игри

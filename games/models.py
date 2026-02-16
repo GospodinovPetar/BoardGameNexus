@@ -1,5 +1,10 @@
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator, MinLengthValidator
+from django.core.validators import (
+    MinValueValidator,
+    MaxValueValidator,
+    MinLengthValidator,
+)
+
 
 class Genre(models.Model):
     name = models.CharField(
@@ -11,7 +16,8 @@ class Genre(models.Model):
         return self.name
 
     class Meta:
-        ordering = ['name']
+        ordering = ["name"]
+
 
 class BoardGame(models.Model):
     title = models.CharField(
@@ -31,7 +37,7 @@ class BoardGame(models.Model):
         validators=[
             MinValueValidator(0.0),
             MaxValueValidator(10.0),
-        ]
+        ],
     )
     min_players = models.IntegerField(
         validators=[
@@ -56,4 +62,4 @@ class BoardGame(models.Model):
         return self.title
 
     class Meta:
-        ordering = ['title']
+        ordering = ["title"]
