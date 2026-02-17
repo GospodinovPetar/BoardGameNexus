@@ -312,3 +312,104 @@ body {
     transform: translateY(-5px);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2) !important;
 }
+/* Custom styles for games page */
+.game-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border: 1px solid var(--bs-gray-800); /* Subtle border for definition in dark mode */
+    border-radius: 12px; /* Slightly more rounded corners */
+    overflow: hidden; /* Ensure image corners match card */
+}
+.game-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 0.5rem 1rem rgba(0, 255, 255, 0.2) !important; /* Cyan glow on hover */
+}
+.game-card-img {
+    height: 250px; /* Make images a bit larger */
+    object-fit: cover;
+    transition: transform 0.3s ease-in-out;
+}
+.game-card:hover .game-card-img {
+    transform: scale(1.05); /* Slight zoom on image hover */
+}
+.game-card-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--bs-primary); /* Use primary color for titles */
+}
+.game-card-info span {
+    display: block; /* Each info item on new line */
+    margin-bottom: 5px;
+}
+.game-card-info i {
+    margin-right: 8px;
+    color: var(--bs-info); /* Icons in info color */
+}
+.btn-view-details {
+    background-image: linear-gradient(to right, #00BFFF 0%, #00FFFF 100%); /* Blue-cyan gradient */
+    border: none;
+    color: white;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+.btn-view-details:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4); /* Stronger glow on button hover */
+}
+.search-form-container {
+    background-color: var(--bs-gray-900); /* Darker background for the form area */
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+.search-input {
+    border: 1px solid var(--bs-primary);
+    background-color: var(--bs-gray-800);
+    color: var(--bs-white);
+}
+.search-input::placeholder {
+    color: var(--bs-gray-500);
+}
+.search-button, .add-game-button {
+    transition: all 0.2s ease;
+}
+.search-button:hover, .add-game-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 8px rgba(0, 255, 255, 0.3);
+}
+/* New styles for filter menu - shared between games and events */
+.filter-options-collapsed {
+    border-top: 1px solid var(--bs-gray-700);
+    padding-top: 15px;
+    margin-top: 15px;
+}
+.filter-btn {
+    min-width: 44px; /* Ensure a good clickable area */
+}
+.form-check-inline {
+    margin-right: 1rem; /* Spacing for inline checkboxes */
+}
+
+/* Styles for search form container - shared between games and events */
+.search-form-container {
+    background-color: var(--bs-gray-900); /* Darker background for the form area */
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+.search-input { /* Assuming this might be used for direct input fields */
+    border: 1px solid var(--bs-primary);
+    background-color: var(--bs-gray-800);
+    color: var(--bs-white);
+}
+.search-input::placeholder {
+    color: var(--bs-gray-500);
+}
+.search-button, .add-game-button, .add-event-button { /* Updated to include add-event-button */
+    transition: all 0.2s ease;
+}
+.search-button:hover, .add-game-button:hover, .add-event-button:hover { /* Updated */
+    transform: translateY(-2px);
+    box-shadow: 0 3px 8px rgba(0, 255, 255, 0.3);
+}

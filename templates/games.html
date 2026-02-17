@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load crispy_forms_tags %}
 
 {% block title %}Всички Игри - BoardGame Nexus{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* Custom styles for games page */
     .game-card {
         transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
         border: 1px solid var(--bs-gray-800); /* Subtle border for definition in dark mode */
@@ -77,14 +77,49 @@
 {% block content %}
 <div class="container py-4">
     <div class="row mb-5 justify-content-center">
-        <div class="col-lg-8 search-form-container">
-            <form method="GET" action="{% url 'games:games' %}" class="d-flex align-items-center justify-content-center flex-wrap gap-2">
-                <div class="input-group flex-grow-1 align-items-center">
-                    <button class="btn btn-primary search-button" type="submit"><i class="bi bi-search"></i></button>
+         <div class="col-lg-8 search-form-container">
+             <form method="GET" action="{% url 'games:games' %}" class="d-flex align-items-center justify-content-center flex-wrap gap-2">
+                    <div class="input-group flex-grow-1 align-items-center">
+                     <button class="btn btn-primary search-button" type="submit"><i class="bi bi-search"></i></button>
                     {{ form.title }}
-                    <a class="btn btn-outline-success add-game-button" href="{% url 'games:add_game' %}">
-                    <i class="bi bi-plus-circle me-2"></i> Добави игра
-                </a>
+                    <button class="btn btn-outline-info filter-btn" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse" title="Още филтри">
+                        <i class="bi bi-funnel-fill"></i>
+                    </button>
+                    <a class="btn btn-outline-success add-game-button" href="{% url 'games:add_game' %}" title="Добави нова игра">
+                        <i class="bi bi-plus-circle"></i> <span class="d-none d-md-inline">Добави игра</span>
+                    </a>
+                </div>
+
+                <div class="collapse filter-options-collapsed" id="filterCollapse">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            {{ form.genre|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.sort_by|as_crispy_field }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.min_rating|as_crispy_field }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.max_rating|as_crispy_field }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.min_players|as_crispy_field }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.max_players|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.release_date_after|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.release_date_before|as_crispy_field }}
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                        <a href="{% url 'games:games' %}" class="btn btn-outline-warning">Изчисти</a>
+                    </div>
                 </div>
             </form>
         </div>
@@ -129,7 +164,7 @@
                         </span>
                     </div>
                     <div class="mt-auto">
-                        <a href="{% url 'games:game_details' game.pk %}" class="btn btn-view-details w-100">Детайли</a>
+                        <a href="{% url 'games:game_details' game.pk %}" class="btn btn-view-details w-100 text-black">Детайли</a>
                     </div>
                 </div>
             </div>

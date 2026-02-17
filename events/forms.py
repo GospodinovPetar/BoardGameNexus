@@ -1,21 +1,95 @@
 from django import forms
 from django.utils.timezone import now
-
 from events.models import Event
+from games.models import BoardGame  # Import BoardGame model
 
 
-class EventSearchForm(forms.Form):
-    search_query = forms.CharField(
-        max_length=30,
-        min_length=1,
+class SearchForm(forms.Form):
+    name = forms.CharField(
+        max_length=100,
         required=False,
-        label="",
+        label="Име на събитие",
         widget=forms.TextInput(
             attrs={
                 "placeholder": "Търсене по име на събитие...",
-                "class": "form-control me-2",
+                "class": "form-control",
             }
         ),
+    )
+    organizer_name = forms.CharField(
+        max_length=100,
+        required=False,
+        label="Организатор",
+        widget=forms.TextInput(
+            attrs={
+                "placeholder": "Име на организатор...",
+                "class": "form-control",
+            }
+        ),
+    )
+    location = forms.MultipleChoiceField(
+        required=False,
+        label="Локация",
+        widget=forms.CheckboxSelectMultiple,
+    )
+    min_players = forms.IntegerField(
+        required=False,
+        label="Мин. играчи",
+        widget=forms.NumberInput(attrs={"placeholder": "1", "class": "form-control"}),
+    )
+    max_players = forms.IntegerField(
+        required=False,
+        label="Макс. играчи",
+        widget=forms.NumberInput(attrs={"placeholder": "100", "class": "form-control"}),
+    )
+    date_time_before = forms.DateTimeField(
+        required=False,
+        label="Преди дата и час",
+        widget=forms.DateTimeInput(
+            attrs={"type": "datetime-local", "class": "form-control"}
+        ),
+    )
+    date_time_after = forms.DateTimeField(
+        required=False,
+        label="След дата и час",
+        widget=forms.DateTimeInput(
+            attrs={"type": "datetime-local", "class": "form-control"}
+        ),
+    )
+    games = forms.ModelMultipleChoiceField(
+        queryset=BoardGame.objects.all(),
+        required=False,
+        label="Игри",
+        widget=forms.CheckboxSelectMultiple,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Dynamically populate location choices
+        self.fields["location"].choices = [
+            (loc, loc)
+            for loc in Event.objects.values_list("location", flat=True).distinct()
+        ]
+
+    SORT_CHOICES = [
+        ("name", "Име (А-Я)"),
+        ("-name", "Име (Я-А)"),
+        ("date_time", "Дата (стари първо)"),
+        ("-date_time", "Дата (нови първо)"),
+        ("organizer_name", "Организатор (А-Я)"),
+        ("-organizer_name", "Организатор (Я-А)"),
+        ("location", "Локация (А-Я)"),
+        ("-location", "Локация (Я-А)"),
+        ("current_players", "Текущи играчи (възходящ)"),
+        ("-current_players", "Текущи играчи (низходящ)"),
+        ("max_players", "Макс. играчи (възходящ)"),
+        ("-max_players", "Макс. играчи (низходящ)"),
+    ]
+    sort_by = forms.ChoiceField(
+        choices=SORT_CHOICES,
+        required=False,
+        label="Сортирай по",
+        widget=forms.Select(attrs={"class": "form-select"}),
     )
 
 

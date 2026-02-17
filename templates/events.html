@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load crispy_forms_tags %}
 
 {% block title %}Събития - BoardGame Nexus{% endblock %}
 
@@ -7,12 +8,56 @@
 
 {% block content %}
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
-        <h1 class="mb-0 text-white-75">Предстоящи Събития</h1>
-        <a href="{% url 'events:add_event' %}" class="btn btn-create-event btn-lg">
-            <i class="bi bi-calendar-plus me-2"></i> Създай Ново Събитие
-        </a>
+    <div class="row mb-5 justify-content-center">
+        <div class="col-lg-10 search-form-container">
+            <form method="GET" action="{% url 'events:events_list' %}" class="d-flex flex-column gap-3">
+                <div class="input-group flex-grow-1 align-items-center">
+                     <button class="btn btn-primary search-button" type="submit"><i class="bi bi-search"></i></button>
+                    {{ form.name }}
+                    <button class="btn btn-outline-info filter-btn" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse" title="Още филтри">
+                        <i class="bi bi-funnel-fill"></i>
+                    </button>
+                    <a class="btn btn-outline-success add-game-button" href="{% url 'events:add_event' %}" title="Добави нова игра">
+                        <i class="bi bi-plus-circle"></i> <span class="d-none d-md-inline">Създай събитие</span>
+                    </a>
+                </div>
+
+                <div class="collapse filter-options-collapsed" id="filterCollapse">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            {{ form.organizer_name|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.location|as_crispy_field }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.min_players|as_crispy_field }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.max_players|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.games|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.date_time_after|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.date_time_before|as_crispy_field }}
+                        </div>
+                        <div class="col-md-12">
+                            {{ form.sort_by|as_crispy_field }}
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                        <a href="{% url 'events:events_list' %}" class="btn btn-outline-warning">Изчисти</a>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
+    
+    <h2 class="mb-4 text-center text-white-75">Предстоящи Събития</h2>
 
     {% if events %}
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">

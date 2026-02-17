@@ -1,19 +1,44 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 
 from games.models import BoardGame
-from .forms import BoardGameSearchForm, GameForm
+from .forms import SearchForm, GameForm
 
 
 def get_all_games(request):
     games = BoardGame.objects.all()
-    form = BoardGameSearchForm(request.GET)
+    form = SearchForm(request.GET)
 
     if form.is_valid():
-        search_query = form.cleaned_data.get("title")
+        title = form.cleaned_data.get("title")
+        genres = form.cleaned_data.get("genre")
+        min_rating = form.cleaned_data.get("min_rating")
+        max_rating = form.cleaned_data.get("max_rating")
+        min_players = form.cleaned_data.get("min_players")
+        max_players = form.cleaned_data.get("max_players")
+        release_date_before = form.cleaned_data.get("release_date_before")
+        release_date_after = form.cleaned_data.get("release_date_after")
+        sort_by = form.cleaned_data.get("sort_by")
 
-        if search_query:
-            games = games.filter(title__icontains=search_query)
+        if title:
+            games = games.filter(title__icontains=title)
+        if genres:
+            games = games.filter(genre__in=genres)
+        if min_rating is not None:
+            games = games.filter(rating__gte=min_rating)
+        if max_rating is not None:
+            games = games.filter(rating__lte=max_rating)
+        if min_players is not None:
+            games = games.filter(min_players__gte=min_players)
+        if max_players is not None:
+            games = games.filter(max_players__lte=max_players)
+        if release_date_before:
+            games = games.filter(release_date__lte=release_date_before)
+        if release_date_after:
+            games = games.filter(release_date__gte=release_date_after)
+
+        if sort_by:
+            games = games.order_by(sort_by)
 
     context = {
         "games": games,
@@ -24,7 +49,7 @@ def get_all_games(request):
 
 
 def get_game_details(request, pk):
-    game = BoardGame.objects.get(pk=pk)
+    game = get_object_or_404(BoardGame, pk=pk)
 
     context = {"game": game}
 
@@ -37,21 +62,21 @@ def add_game(request):
         if form.is_valid():
             form.save()
             return redirect("games:games")
-    else:  # GET request
+    else:
         form = GameForm()
 
     context = {
         "form": form,
         "page_title": "Добави нова игра",
         "button_text": "Добави",
-        "form_action_url": redirect("games:add_game"),
+        "form_action_url": reverse("games:add_game"),
     }
 
-    return render(request, "game.html", context)
+    return render(request, "game_cud.html", context)
 
 
 def edit_game(request, pk):
-    game = BoardGame.objects.get(pk=pk)
+    game = get_object_or_404(BoardGame, pk=pk)
     if request.method == "POST":
         form = GameForm(request.POST, instance=game)
         if form.is_valid():
@@ -69,11 +94,11 @@ def edit_game(request, pk):
         "form_action_url": reverse("games:edit_game", kwargs={"pk": pk}),
     }
 
-    return render(request, "game.html", context)
+    return render(request, "game_cud.html", context)
 
 
 def delete_game(request, pk):
-    game = BoardGame.objects.get(pk=pk)
+    game = get_object_or_404(BoardGame, pk=pk)
 
     if request.method == "POST":
         game.delete()
@@ -93,4 +118,4 @@ def delete_game(request, pk):
         "confirm_message": f'Сигурни ли сте, че искате да изтриете "{game.title}"? Това действие не може да бъде отменено!',
     }
 
-    return render(request, "game.html", context)
+    return render(request, "game_cud.html", context)
