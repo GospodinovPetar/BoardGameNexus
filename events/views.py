@@ -3,13 +3,13 @@ from django.contrib import messages
 from django.urls import reverse
 from django.db.models import Q  # Import Q for complex lookups
 
-from events.forms import SearchForm, EventForm
+from events.forms import EventSearchForm, EventForm
 from events.models import Event
 
 
 def events_list(request):
     events = Event.objects.all()
-    form = SearchForm(request.GET)
+    form = EventSearchForm(request.GET)
 
     if form.is_valid():
         name = form.cleaned_data.get("name")

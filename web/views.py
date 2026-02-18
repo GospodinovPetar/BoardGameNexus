@@ -23,3 +23,7 @@ def mission(request):
         "game_count": game_count,
     }
     return render(request, "mission.html", context)
+
+
+def contact_view(request):
+    return render(request, "contact.html")

@@ -413,3 +413,54 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 3px 8px rgba(0, 255, 255, 0.3);
 }
+
+/* Footer Modernization */
+.footer {
+    border-top: 5px solid var(--bs-primary); /* A distinct line at the top of the footer */
+    /* Add some padding to the bottom for overall spacing, already handled by pb-4 in HTML */
+}
+
+.footer h5 {
+    letter-spacing: 0.05em; /* Slightly more spaced out headings */
+}
+
+.footer .text-primary {
+    color: var(--bs-info) !important; /* Use info color for headings for contrast */
+}
+
+.footer ul {
+    padding: 0;
+    list-style: none; /* Ensure no default list styling */
+}
+
+.footer ul li {
+    /* Removed margin-bottom here, relying on a.py-1 d-block for spacing */
+}
+
+.footer ul li a {
+    transition: color 0.2s ease-in-out; /* Smooth color transition */
+}
+
+.footer ul li a:hover {
+    color: var(--bs-light) !important;
+    text-decoration: none !important; /* Remove underline on hover, let color change be the focus */
+}
+
+.footer .social-icons a {
+    transition: transform 0.2s ease-in-out, color 0.2s ease-in-out;
+    display: inline-block;
+    font-size: 1.8rem; /* Slightly smaller icons for better balance */
+}
+
+.footer .social-icons a:hover {
+    transform: translateY(-3px); /* Less aggressive lift */
+    color: var(--bs-primary) !important; /* Use primary color for social icon hover */
+}
+
+.footer hr {
+    border-color: rgba(255, 255, 255, 0.15); /* Slightly more visible HR */
+}
+
+.footer .text-muted {
+    font-size: 0.9rem; /* Smaller font for copyright/muted text */
+}

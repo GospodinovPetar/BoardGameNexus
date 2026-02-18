@@ -2,12 +2,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 
 from games.models import BoardGame
-from .forms import SearchForm, GameForm
+from .forms import GameSearchForm, GameForm
 
 
 def get_all_games(request):
     games = BoardGame.objects.all()
-    form = SearchForm(request.GET)
+    form = GameSearchForm(request.GET)
 
     if form.is_valid():
         title = form.cleaned_data.get("title")

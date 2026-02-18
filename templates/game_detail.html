@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ game.title }} - Детайли{% endblock %}
+{% block title %}{{ game.title }} - Details{% endblock %}
 
 {% block extra_css %}{% endblock %}
 
@@ -13,7 +13,7 @@
                 {% if game.image_url %}
                     <img src="{{ game.image_url }}" class="game-detail-img" alt="{{ game.title }}">
                 {% else %}
-                    <img src="{% static 'images/placeholder_game.png' %}" class="game-detail-img" alt="Няма налично изображение за {{ game.title }}">
+                    <img src="{% static 'images/placeholder_game.png' %}" class="game-detail-img" alt="No image available for {{ game.title }}">
                 {% endif %}
             </div>
             <div class="col-md-6 d-flex flex-column">
@@ -23,14 +23,14 @@
 
                     <ul class="list-group list-group-flush game-info-list mb-4">
                         <li class="list-group-item text-start">
-                            <i class="bi bi-controller"></i> <strong>Жанр:</strong> {{ game.genre.name }}
+                            <i class="bi bi-controller"></i> <strong>Genre:</strong> {{ game.genre.name }}
                         </li>
                         <li class="list-group-item text-start">
-                            <i class="bi bi-people-fill"></i> <strong>Играчи:</strong> {{ game.min_players }} - {{ game.max_players }}
+                            <i class="bi bi-people-fill"></i> <strong>Players:</strong> {{ game.min_players }} - {{ game.max_players }}
                         </li>
                         <li class="list-group-item text-start d-flex flex-column">
                             <div>
-                                <i class="bi bi-star-fill"></i> <strong>Рейтинг:</strong>
+                                <i class="bi bi-star-fill"></i> <strong>Rating:</strong>
                                 <span class="ms-2 d-inline-block" style="font-size: 1.2rem;">
                                     {% for i in "12345" %}
                                         {% if forloop.counter <= game.rating %}
@@ -45,14 +45,14 @@
                         </li>
                         {% if game.release_date %}
                             <li class="list-group-item text-start">
-                                <i class="bi bi-calendar-event"></i> <strong>Дата на издаване:</strong> {{ game.release_date|date:"M d, Y" }}
+                                <i class="bi bi-calendar-event"></i> <strong>Release Date:</strong> {{ game.release_date|date:"M d, Y" }}
                             </li>
                         {% endif %}
                     </ul>
                     
-                    <h5 class="game-description-heading text-start">Описание:</h5>
+                    <h5 class="game-description-heading text-start">Description:</h5>
                     <p class="game-description-text text-start">
-                        {{ game.description|default:"Няма налично описание за тази игра." }}
+                        {{ game.description|default:"No description available for this game." }}
                     </p>
                     
 
@@ -63,22 +63,22 @@
             <div class="row row-cols-1 row-cols-md-4 g-3">
                 <div class="col">
                     <a href="{% url 'games:games' %}" class="btn btn-action-secondary btn-action-uniform w-100">
-                        <i class="bi bi-arrow-left me-2"></i> Обратно към игрите
+                        <i class="bi bi-arrow-left me-2"></i> Back to Games
                     </a>
                 </div>
                 <div class="col">
                     <a href="#" class="btn btn-primary btn-action-uniform w-100">
-                        <i class="bi bi-calendar-plus me-2"></i> Създай събитие
+                        <i class="bi bi-calendar-plus me-2"></i> Create Event
                     </a>
                 </div>
                 <div class="col">
                     <a href="{% url 'games:edit_game' game.pk %}" class="btn btn-action-primary btn-action-uniform w-100">
-                        <i class="bi bi-pencil me-2"></i> Редактирай игра
+                        <i class="bi bi-pencil me-2"></i> Edit Game
                     </a>
                 </div>
                 <div class="col">
                     <a href="{% url 'games:delete_game' game.pk %}" class="btn btn-danger btn-action-uniform w-100">
-                        <i class="bi bi-trash me-2"></i> Изтрий
+                        <i class="bi bi-trash me-2"></i> Delete
                     </a>
                 </div>
             </div>

@@ -2,7 +2,7 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block title %}Всички Игри - BoardGame Nexus{% endblock %}
+{% block title %}All Games - BoardGame Nexus{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -82,11 +82,11 @@
                     <div class="input-group flex-grow-1 align-items-center">
                      <button class="btn btn-primary search-button" type="submit"><i class="bi bi-search"></i></button>
                     {{ form.title }}
-                    <button class="btn btn-outline-info filter-btn" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse" title="Още филтри">
+                    <button class="btn btn-outline-info filter-btn" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse" title="More filters">
                         <i class="bi bi-funnel-fill"></i>
                     </button>
-                    <a class="btn btn-outline-success add-game-button" href="{% url 'games:add_game' %}" title="Добави нова игра">
-                        <i class="bi bi-plus-circle"></i> <span class="d-none d-md-inline">Добави игра</span>
+                    <a class="btn btn-outline-success add-game-button" href="{% url 'games:add_game' %}" title="Add new game">
+                        <i class="bi bi-plus-circle"></i> <span class="d-none d-md-inline">Add Game</span>
                     </a>
                 </div>
 
@@ -118,26 +118,26 @@
                         </div>
                     </div>
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
-                        <a href="{% url 'games:games' %}" class="btn btn-outline-warning">Изчисти</a>
+                        <a href="{% url 'games:games' %}" class="btn btn-outline-warning">Clear</a>
                     </div>
                 </div>
             </form>
         </div>
     </div>
     
-    <h2 class="mb-4 text-center text-white-75">Всички Игри</h2>
+    <h2 class="mb-4 text-center text-white-75">All Games</h2>
 
     {% if not games %}
     <div class="text-center my-5 p-4 bg-dark rounded-3 shadow">
         {% if form.title.value %}
-            <p class="lead text-white-50">Няма намерени игри с такова име...</p>
+            <p class="lead text-white-50">No games found with that name...</p>
             <a class="btn btn-outline-primary btn-lg mt-3" href="{% url 'games:games' %}">
-                <i class="bi bi-arrow-left me-2"></i> Обратно към всички игри
+                <i class="bi bi-arrow-left me-2"></i> Back to all games
             </a>
         {% else %}
-            <p class="lead text-white-50">Все още няма добавени игри в BoardGame Nexus.</p>
+            <p class="lead text-white-50">No games have been added to BoardGame Nexus yet.</p>
             <a class="btn btn-success btn-lg mt-3" href="{% url 'games:add_game' %}">
-                <i class="bi bi-controller me-2"></i> Добави първата игра!
+                <i class="bi bi-controller me-2"></i> Add the first game!
             </a>
         {% endif %}
     </div>
@@ -150,21 +150,21 @@
                     {% if game.image_url %}
                         <img src="{{ game.image_url }}" class="card-img-top game-card-img" alt="{{ game.title }}">
                     {% else %}
-                        <img src="{% static 'images/placeholder_game.png' %}" class="card-img-top game-card-img" alt="Няма налично изображение за {{ game.title }}">
+                        <img src="{% static 'images/placeholder_game.png' %}" class="card-img-top game-card-img" alt="No image available for {{ game.title }}">
                     {% endif %}
                 </a>
                 <div class="card-body d-flex flex-column text-center">
                     <h5 class="game-card-title mb-3">{{ game.title }}</h5>
                     <div class="game-card-info flex-grow-1 mb-3">
-                        <span><i class="bi bi-tag-fill"></i> Жанр: {{ game.genre.name }}</span>
-                        <span><i class="bi bi-people-fill"></i> Играчи: {{ game.min_players }}-{{ game.max_players }}</span>
+                        <span><i class="bi bi-tag-fill"></i> Genre: {{ game.genre.name }}</span>
+                        <span><i class="bi bi-people-fill"></i> Players: {{ game.min_players }}-{{ game.max_players }}</span>
                         <span>
-                            <i class="bi bi-star-fill"></i> Рейтинг: {{ game.rating }} / 5.0
-                            {% if game.rating > 4.5 %} <span class="badge bg-warning text-dark ms-2">Топ!</span>{% endif %}
+                            <i class="bi bi-star-fill"></i> Rating: {{ game.rating }} / 5.0
+                            {% if game.rating > 4.5 %} <span class="badge bg-warning text-dark ms-2">Top!</span>{% endif %}
                         </span>
                     </div>
                     <div class="mt-auto">
-                        <a href="{% url 'games:game_details' game.pk %}" class="btn btn-view-details w-100 text-black">Детайли</a>
+                        <a href="{% url 'games:game_details' game.pk %}" class="btn btn-view-details w-100 text-black">Details</a>
                     </div>
                 </div>
             </div>

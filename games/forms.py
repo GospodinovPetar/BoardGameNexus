@@ -3,7 +3,7 @@ from django import forms
 from games.models import BoardGame, Genre
 
 
-class SearchForm(forms.Form):
+class GameSearchForm(forms.Form):
     title = forms.CharField(
         max_length=200,
         required=False,

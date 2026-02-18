@@ -4,7 +4,7 @@ from events.models import Event
 from games.models import BoardGame  # Import BoardGame model
 
 
-class SearchForm(forms.Form):
+class EventSearchForm(forms.Form):
     name = forms.CharField(
         max_length=100,
         required=False,
@@ -65,7 +65,6 @@ class SearchForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Dynamically populate location choices
         self.fields["location"].choices = [
             (loc, loc)
             for loc in Event.objects.values_list("location", flat=True).distinct()

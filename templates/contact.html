@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contact Us - BoardGame Nexus{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card bg-dark text-white shadow-lg border-primary">
+                <div class="card-body p-5">
+                    <h1 class="card-title text-center mb-4 text-primary">Contact BoardGame Nexus</h1>
+                    <p class="card-text text-center lead mb-4">
+                        Have questions, suggestions, or just want to say hello? We'd love to hear from you!
+                    </p>
+
+                    <div class="text-center mb-4">
+                        <p class="fs-5"><i class="bi bi-envelope-fill me-2 text-info"></i> Email Us:</p>
+                        <a href="mailto:contact@boardgamenexus.com" class="btn btn-outline-info btn-lg">contact@boardgamenexus.com</a>
+                    </div>
+
+                    <hr class="my-4 bg-secondary">
+
+                    <p class="card-text text-center mb-3">
+                        For specific inquiries, please consider reaching out through the appropriate channels.
+                    </p>
+                    <ul class="list-unstyled text-center mb-5">
+                        <li class="mb-2"><i class="bi bi-patch-question-fill me-2 text-warning"></i> General Inquiries: <a href="mailto:info@boardgamenexus.com" class="text-warning">info@boardgamenexus.com</a></li>
+                        <li class="mb-2"><i class="bi bi-bug-fill me-2 text-danger"></i> Report a Bug: <a href="mailto:support@boardgamenexus.com" class="text-danger">support@boardgamenexus.com</a></li>
+                        <li><i class="bi bi-chat-dots-fill me-2 text-success"></i> Partnership Opportunities: <a href="mailto:partnerships@boardgamenexus.com" class="text-success">partnerships@boardgamenexus.com</a></li>
+                    </ul>
+
+                    <p class="text-center text-muted mt-5">
+                        We strive to respond to all inquiries within 24-48 hours. Thank you for your patience!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

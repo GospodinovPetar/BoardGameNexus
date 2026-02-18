@@ -27,13 +27,13 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.app_name == 'games' and request.resolver_match.url_name == 'games' %}active{% endif %}" {% if request.resolver_match.app_name == 'games' and request.resolver_match.url_name == 'games' %}aria-current="page"{% endif %} href={% url 'games:games' %}>Всички игри</a>
+                            <a class="nav-link {% if request.resolver_match.app_name == 'games' and request.resolver_match.url_name == 'games' %}active{% endif %}" {% if request.resolver_match.app_name == 'games' and request.resolver_match.url_name == 'games' %}aria-current="page"{% endif %} href={% url 'games:games' %}>All Games</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.app_name == 'events' and request.resolver_match.url_name == 'events_list' %}active{% endif %}" {% if request.resolver_match.app_name == 'events' and request.resolver_match.url_name == 'events_list' %}aria-current="page"{% endif %} href={% url 'events:events_list' %}>Събития</a>
+                            <a class="nav-link {% if request.resolver_match.app_name == 'events' and request.resolver_match.url_name == 'events_list' %}active{% endif %}" {% if request.resolver_match.app_name == 'events' and request.resolver_match.url_name == 'events_list' %}aria-current="page"{% endif %} href={% url 'events:events_list' %}>Events</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'placeholder_whats_to_play' %}active{% endif %}" {% if request.resolver_match.url_name == 'placeholder_whats_to_play' %}aria-current="page"{% endif %} href="#">Какво да играем?</a>
+                            <a class="nav-link {% if request.resolver_match.app_name == 'web' and request.resolver_match.url_name == 'contact' %}active{% endif %}" {% if request.resolver_match.app_name == 'web' and request.resolver_match.url_name == 'contact' %}aria-current="page"{% endif %} href={% url 'web:contact' %}>Contact Us</a>
                         </li>
                     </ul>
                 </div>
@@ -59,8 +59,21 @@
         {% endblock %}
     </main>
 
-    <footer class="mt-5 p-3 bg-dark text-white text-center">
-        <p>&copy; 2025 BoardGame Nexus</p>
+    <footer class="footer bg-dark text-white pt-5 pb-4">
+        <div class="container">
+            <hr class="my-4 bg-light">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <p class="mb-0 text-muted">&copy; <script>document.write(new Date().getFullYear())</script> BoardGame Nexus. All rights reserved.</p>
+                    <div class="social-icons mt-3">
+                        <a href="#" class="text-white mx-2"><i class="bi bi-facebook fs-4"></i></a>
+                        <a href="#" class="text-white mx-2"><i class="bi bi-twitter fs-4"></i></a>
+                        <a href="#" class="text-white mx-2"><i class="bi bi-instagram fs-4"></i></a>
+                        <a href="#" class="text-white mx-2"><i class="bi bi-discord fs-4"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </footer>
 
     <!-- Bootstrap JS Bundle with Popper -->

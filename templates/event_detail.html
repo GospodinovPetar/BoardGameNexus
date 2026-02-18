@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ event.name }} - Детайли за събитието{% endblock %}
+{% block title %}{{ event.name }} - Event Details{% endblock %}
 
 {% block extra_css %}{% endblock %}
 
@@ -20,13 +20,13 @@
         <div class="card-body p-4">
             <ul class="list-group list-group-flush event-info-list mb-4">
                 <li class="list-group-item">
-                    <i class="bi bi-person-fill"></i> <strong>Организатор:</strong> {{ event.organizer_name }}
+                    <i class="bi bi-person-fill"></i> <strong>Organizer:</strong> {{ event.organizer_name }}
                 </li>
                 <li class="list-group-item">
-                    <i class="bi bi-geo-alt-fill"></i> <strong>Място:</strong> {{ event.location }}
+                    <i class="bi bi-geo-alt-fill"></i> <strong>Location:</strong> {{ event.location }}
                 </li>
                 <li class="list-group-item d-flex align-items-center">
-                    <i class="bi bi-people-fill"></i> <strong>Играчи:</strong>
+                    <i class="bi bi-people-fill"></i> <strong>Players:</strong>
                     <div class="flex-grow-1 ms-3">
                         <span class="me-2">{{ event.current_players }} / {{ event.max_players }}</span>
                         {% widthratio event.current_players event.max_players 100 as percentage %}
@@ -39,13 +39,13 @@
                 </li>
             </ul>
 
-            <h5 class="event-description-heading text-start">Описание на събитието:</h5>
+            <h5 class="event-description-heading text-start">Event Description:</h5>
             <p class="event-description-text text-start">
-                {{ event.description|default:"Няма налично описание за това събитие." }}
+                {{ event.description|default:"No description available for this event." }}
             </p>
 
             {% if event.games.all %}
-            <h5 class="event-description-heading text-start mt-4">Игри, които ще се играят:</h5>
+            <h5 class="event-description-heading text-start mt-4">Games to be played:</h5>
             <div class="d-flex flex-wrap gap-2 mb-4">
                 {% for game in event.games.all %}
                 <span class="badge bg-primary rounded-pill p-2">
@@ -59,22 +59,22 @@
                 <div class="row row-cols-1 row-cols-md-4 g-3">
                     <div class="col">
                         <a href="{% url 'events:events_list' %}" class="btn btn-back-events btn-action-uniform w-100">
-                            <i class="bi bi-arrow-left me-2"></i> Обратно
+                            <i class="bi bi-arrow-left me-2"></i> Back
                         </a>
                     </div>
                     <div class="col">
                         <a href="{% url 'events:join' event.pk %}" class="btn btn-join-event-lg btn-action-uniform w-100">
-                            <i class="bi bi-box-arrow-in-right me-2"></i> Присъедини се
+                            <i class="bi bi-box-arrow-in-right me-2"></i> Join
                         </a>
                     </div>
                     <div class="col">
                         <a href="{% url 'events:edit_event' event.pk %}" class="btn btn-action-primary btn-action-uniform w-100">
-                            <i class="bi bi-pencil me-2"></i> Редактирай
+                            <i class="bi bi-pencil me-2"></i> Edit
                         </a>
                     </div>
                     <div class="col">
                         <a href="{% url 'events:delete_event' event.pk %}" class="btn btn-danger btn-action-uniform w-100">
-                            <i class="bi bi-trash me-2"></i> Изтрий
+                            <i class="bi bi-trash me-2"></i> Delete
                         </a>
                     </div>
                 </div>

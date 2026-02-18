@@ -36,7 +36,7 @@ class BoardGame(models.Model):
         default=0.0,
         validators=[
             MinValueValidator(0.0),
-            MaxValueValidator(10.0),
+            MaxValueValidator(5.0),
         ],
     )
     min_players = models.IntegerField(
