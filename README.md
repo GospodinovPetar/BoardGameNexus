@@ -1,201 +1,51 @@
-# 🎲 BoardGame Nexus
+# BoardGame Nexus
 
-> **Your central hub for everything board games.**  
-> Discover new titles, organize events, and connect with fellow enthusiasts - all in one place.
-
----
-
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Database Design](#database-design)
-- [Templates & Pages](#templates--pages)
-- [Forms & Validation](#forms--validation)
-- [Custom Template Filters](#custom-template-filters)
-- [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
-- [Usage](#usage)
+A web app for board game fans - browse games, create events, and keep track of who's joining. Built with Django as my exam project for the SoftUni Django Basics course.
 
 ---
 
-## Overview
+## What it does
 
-BoardGame Nexus is a Django web application built as part of the **Django Basics Course @ SoftUni**. It allows users to browse a catalog of board games, manage gaming events, and explore community gatherings - without requiring login or registration.
+The app has three main sections:
 
----
+**Games** - a catalog where you can add board games with ratings, player counts, genre, and a cover image. The list has search and filtering (by genre, rating range, player count, release date) and sorting.
 
-## Features
+**Events** - create gaming events, set a date/time and location, link them to games from the catalog, and track how many players have joined. Events can be filtered and sorted as well.
 
-- 🎮 **Game Catalog** - Browse, search, filter, and sort board games by title, genre, rating, player count, and release date
-- 📅 **Event Management** - Create, join, edit, and delete gaming events with player capacity tracking
-- 🔍 **Advanced Filtering** - Multi-field search with collapsible filter panels on both Games and Events pages
-- ✅ **Full CRUD** - Complete Create, Read, Update, Delete functionality for both Games and Events
-- 🚫 **Delete Confirmation** - Confirmation step with read-only form fields before any deletion
-- 📢 **In-App Notifications** - Django messages framework used for success, warning, and error feedback
-- 🎨 **Responsive Design** - Bootstrap 5 dark theme, mobile-friendly layout
-- 🛡️ **Custom 404 Page** - Friendly error page for missing routes
-- ⚙️ **Jazzmin Admin Panel** - Enhanced Django admin interface
+**Static pages** - The Contact page. The home and mission pages show live counts of games and events in the database.
+
+A small extra I liked: when you open "Create Event" from a game's detail page, that game gets pre-selected in the event form automatically.
 
 ---
 
-## Tech Stack
+## Tech
 
-| Technology | Purpose |
-|---|---|
-| **Django 6.0.2** | Web framework |
-| **Python 3.12** | Programming language |
-| **PostgreSQL** | Database |
-| **Bootstrap 5.3** | Frontend styling (dark theme) |
-| **Bootstrap Icons** | Icon library |
-| **django-crispy-forms** | Form rendering |
-| **crispy-bootstrap5** | Bootstrap 5 crispy forms template pack |
-| **django-jazzmin** | Admin panel customization |
-| **python-dotenv** | Environment variable management |
+- Django 6.0.2
+- PostgreSQL
+- Bootstrap 5 (dark theme)
+- django-crispy-forms + crispy-bootstrap5
+- django-jazzmin (admin panel)
+- python-dotenv
 
 ---
 
-## Database Design
+## Setup
 
-### Models
+**Requirements:** Python 3.10+, PostgreSQL
 
-**`Genre`** *(games app)*
-| Field | Type | Notes |
-|---|---|---|
-| `name` | CharField | unique |
-
-**`BoardGame`** *(games app)*
-| Field | Type | Notes |
-|---|---|---|
-| `title` | CharField | unique |
-| `genre` | ForeignKey → Genre | **many-to-one** relationship, CASCADE |
-| `release_date` | DateField | optional |
-| `rating` | FloatField | 0.0 – 5.0, validated |
-| `min_players` | IntegerField | min 1 |
-| `max_players` | IntegerField | max 100 |
-| `description` | TextField | optional |
-| `image_url` | URLField | optional |
-
-**`Event`** *(events app)*
-| Field | Type | Notes |
-|---|---|---|
-| `name` | CharField | — |
-| `description` | TextField | — |
-| `date_time` | DateTimeField | must be in the future |
-| `location` | CharField | — |
-| `organizer_name` | CharField | — |
-| `current_players` | PositiveIntegerField | default 1 |
-| `max_players` | PositiveIntegerField | min 2 |
-| `games` | ManyToManyField → BoardGame | **many-to-many** relationship |
-
-### Relationships
-- `BoardGame` → `Genre` : **Many-to-One** (ForeignKey)
-- `Event` ↔ `BoardGame` : **Many-to-Many** (ManyToManyField)
-
----
-
-## Templates & Pages
-
-| Template | Dynamic Data | Description                                       |
-|---|--------------|---------------------------------------------------|
-| `base.html` | -            | Base layout - navbar, footer, messages            |
-| `_form_card.html` | -            | Reusable partial - shared by game_cud & event_cud |
-| `home.html` | ✅            | Live game & event counts                          |
-| `mission.html` | ✅            | Mission page with live counts                     |
-| `contact.html` | -            | Contact information                               |
-| `games.html` | ✅            | All games - filterable, sortable                  |
-| `game_detail.html` | ✅            | Single game details                               |
-| `game_cud.html` | ✅            | Create / Edit / Delete game form                  |
-| `events.html` | ✅            | All events - filterable, sortable                 |
-| `event_detail.html` | ✅            | Single event details                              |
-| `event_cud.html` | ✅            | Create / Edit / Delete event form                 |
-| `404.html` | -            | Custom 404 error page                             |
-
-**Template inheritance:** All pages extend `base.html`. The `_form_card.html` partial is reused across `game_cud.html` and `event_cud.html`, avoiding code duplication.
-
----
-
-## Forms & Validation
-
-| Form | Type | Key Validations                                                               |
-|---|---|-------------------------------------------------------------------------------|
-| `GameForm` | ModelForm | `min_players` ≤ `max_players`, rating 0–5, release date not in the future     |
-| `GameSearchForm` | Form | Optional filters - title, genre, rating range, player range, date range       |
-| `EventForm` | ModelForm | `current_players` ≤ `max_players`, date must be in the future                 |
-| `EventSearchForm` | Form | Optional filters - name, organizer, location, player range, date range, games |
-
-**Additional validation features:**
-- Validations applied both in **forms** (`clean()`) and **models** (field validators + `validate_future_date`)
-- User-friendly, localized error messages on all fields
-- Customized labels, placeholders, and help texts throughout
-- Delete views render forms with **read-only fields** to prevent accidental edits
-- All delete operations require an explicit **confirmation step**
-
----
-
-## Custom Template Filters
-
-Located in `games/templatetags/game_filters.py`:
-
-```python
-# Returns True if the event has no free spots
-# Usage: {% if event|is_event_full %}
-@register.filter
-def is_event_full(event):
-    return event.current_players >= event.max_players
-
-# Returns a formatted player range string
-# Usage: {{ game|player_range }} → "2 - 4 players"
-@register.filter
-def player_range(game):
-    return f"{game.min_players} - {game.max_players} players"
-```
-
-**Used in templates:**
-- `events.html` - `is_event_full` renders a red "Full" badge on fully booked events
-- `games.html` - `player_range` formats the player count in game cards
-- `game_detail.html` - `player_range` formats the player count in the detail view
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- Python 3.10+
-- pip
-- PostgreSQL server running locally
-
-### Installation
-
-**1. Clone the repository:**
 ```bash
 git clone https://github.com/your-username/BoardGameNexus.git
 cd BoardGameNexus
-```
 
-**2. Create and activate a virtual environment:**
-```bash
 python -m venv .venv
+source .venv/bin/activate      # Windows: .venv\Scripts\activate
 
-# macOS / Linux:
-source .venv/bin/activate
-
-# Windows:
-.venv\Scripts\activate
-```
-
-**3. Install dependencies:**
-```bash
 pip install -r requirements.txt
 ```
 
-**4. Set up environment variables:**
+Create a `.env` file in the project root (same folder as `manage.py`):
 
-Create a `.env` file in the project root (same folder as `manage.py`) with the following content:
-
-```env
+```
 SECRET_KEY=your-secret-key-here
 DB_NAME=your_database_name
 DB_USER=your_postgres_username
@@ -204,69 +54,72 @@ DB_HOST=127.0.0.1
 DB_PORT=5432
 ```
 
-> See [Environment Variables](#environment-variables) below for details on each variable.
-
-**5. Create the PostgreSQL database:**
-```sql
-CREATE DATABASE your_database_name;
-```
-
-**6. Apply migrations:**
 ```bash
 python manage.py migrate
-```
-
-**7. Create a superuser** *(for admin panel access)*:
-```bash
-python manage.py createsuperuser
-```
-
-**8. Run the development server:**
-```bash
+python manage.py createsuperuser   # for admin access
 python manage.py runserver
 ```
 
-The application will be available at **http://127.0.0.1:8000/**
+App runs at `http://127.0.0.1:8000/`
 
 ---
 
-## Environment Variables
+## Pages
 
-All sensitive configuration is stored in a `.env` file. **This file is not committed to version control.**
-
-| Variable | Description | Example |
-|---|---|---|
-| `SECRET_KEY` | Django secret key for cryptographic signing | `django-insecure-abc123...` |
-| `DB_NAME` | PostgreSQL database name | `nexus` |
-| `DB_USER` | PostgreSQL username | `postgres` |
-| `DB_PASSWORD` | PostgreSQL password | `yourpassword` |
-| `DB_HOST` | Database host | `127.0.0.1` |
-| `DB_PORT` | Database port | `5432` |
-
----
-
-## Usage
-
-| Page | URL | Description                         |
-|---|---|-------------------------------------|
-| Home | `/` | Landing page with live stats        |
-| Our Mission | `/mission/` | About the platform                  |
-| Contact | `/contact/` | Contact information                 |
-| All Games | `/games/` | Browse & filter the game catalog    |
-| Game Detail | `/games/details/<id>` | Full info for a single game         |
-| Add Game | `/games/add/` | Add a new game to the catalog       |
-| Edit Game | `/games/edit/<id>` | Edit an existing game               |
-| Delete Game | `/games/delete/<id>` | Delete a game (with confirmation)   |
-| All Events | `/events/` | Browse & filter events              |
-| Event Detail | `/events/<id>/` | Full info for a single event        |
-| Join Event | `/events/join/<id>/` | Join an event (session-based)       |
-| Add Event | `/events/add/` | Create a new event                  |
-| Edit Event | `/events/edit/<id>` | Edit an existing event              |
-| Delete Event | `/events/delete/<id>` | Delete an event (with confirmation) |
-| Admin Panel | `/admin/` | Django admin - requires superuser   |
+| URL | Page |
+|---|---|
+| `/` | Home |
+| `/mission/` | Our Mission |
+| `/contact/` | Contact |
+| `/games/` | All games (search + filter) |
+| `/games/details/<id>` | Game detail |
+| `/games/add/` | Add game |
+| `/games/edit/<id>` | Edit game |
+| `/games/delete/<id>` | Delete game (with confirmation) |
+| `/events/` | All events (search + filter) |
+| `/events/<id>/` | Event detail |
+| `/events/add/` | Create event |
+| `/events/edit/<id>` | Edit event |
+| `/events/delete/<id>` | Delete event (with confirmation) |
+| `/events/join/<id>/` | Join event |
+| `/admin/` | Admin panel (superuser only) |
 
 ---
 
-## License
+## Forms and validation
 
-This project is open-sourced under the **MIT License**.
+`GameForm` validates that min_players =< max_players, rating is between 0 and 5, and release date isn't in the future. `EventForm` validates that current_players =< max_players and the event date isn't in the past - this is also enforced at the model level with a custom validator (`validate_future_date`). Both delete forms render all fields as read-only so you can review what you're deleting before confirming.
+
+---
+
+## Templates
+
+All pages extend `base.html`. Create/Edit/Delete for both games and events share a single `_form_card.html` partial - it handles the form layout, cancel button, and submit button color (red for delete, blue otherwise) based on context variables.
+
+Custom template filters are in `games/templatetags/game_filters.py`:
+- `player_range` - formats min/max players as "2 - 4 players", used in game cards and detail page
+- `is_event_full` - returns True if an event has no free spots, used to show a "Full" badge on event cards
+
+---
+
+## Project structure
+
+```
+BoardGameNexus/
+├── games/          # Game catalog - models, views, forms, custom template filters
+├── events/         # Event management - includes session-based join tracking
+├── web/            # Static pages (home, mission, contact)
+├── templates/      # All HTML templates
+├── static/         # CSS and images
+└── BoardGameNexus/ # Project settings and URLs
+```
+
+Three apps, three models (`Genre`, `BoardGame`, `Event`), many-to-one and many-to-many relationships between them.
+
+---
+
+## Notes
+
+- The custom 404 page only shows when `DEBUG = False`
+- Session tracking for joined events resets if you clear browser cookies
+- Tested on Python 3.12 / macOS

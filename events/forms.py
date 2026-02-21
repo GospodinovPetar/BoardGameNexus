@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.timezone import now
 from events.models import Event
-from games.models import BoardGame  # Import BoardGame model
+from games.models import BoardGame
 
 
 class EventSearchForm(forms.Form):

@@ -63,7 +63,7 @@ def join_event(request, pk):
 
     if pk in joined_events:
         messages.warning(request, "You have already joined this event!")
-        return redirect("events:events_list")
+        return redirect("events:event_detail", pk=pk)
 
     if event.current_players < event.max_players:
         event.current_players += 1
@@ -76,7 +76,7 @@ def join_event(request, pk):
     else:
         messages.error(request, "Sorry, all spots are filled.")
 
-    return redirect("events:events_list")
+    return redirect("events:event_detail", pk=pk)
 
 
 def add_event(request):
