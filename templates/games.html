@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
+{% load game_filters %}
 
 {% block title %}All Games - BoardGame Nexus{% endblock %}
 
@@ -157,7 +158,7 @@
                     <h5 class="game-card-title mb-3">{{ game.title }}</h5>
                     <div class="game-card-info flex-grow-1 mb-3">
                         <span><i class="bi bi-tag-fill"></i> Genre: {{ game.genre.name }}</span>
-                        <span><i class="bi bi-people-fill"></i> Players: {{ game.min_players }}-{{ game.max_players }}</span>
+                        <span><i class="bi bi-people-fill"></i> {{ game|player_range }}</span>
                         <span>
                             <i class="bi bi-star-fill"></i> Rating: {{ game.rating }} / 5.0
                             {% if game.rating > 4.5 %} <span class="badge bg-warning text-dark ms-2">Top!</span>{% endif %}

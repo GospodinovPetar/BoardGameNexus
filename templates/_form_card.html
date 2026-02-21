@@ -1,0 +1,22 @@
+{% load crispy_forms_tags %}
+
+{% if confirm_message %}
+    <div class="alert alert-danger text-center" role="alert">
+        {{ confirm_message }}
+    </div>
+{% endif %}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <form method="post" class="card p-4 shadow-sm" action="{{ form_action_url }}">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ cancel_url }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn {% if delete %}btn-danger{% else %}btn-primary{% endif %}">
+                    {{ button_text }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

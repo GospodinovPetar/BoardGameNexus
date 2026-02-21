@@ -23,13 +23,13 @@ class Event(models.Model):
     )
 
     current_players = models.PositiveIntegerField(
-        default=1, verbose_name="Текущ брой играчи"
+        default=1, verbose_name="Current Players"
     )
 
     max_players = models.PositiveIntegerField(
         default=4,
         validators=[MinValueValidator(2)],
-        verbose_name="Максимален брой места",
+        verbose_name="Maximum Players",
     )
 
     games = models.ManyToManyField(

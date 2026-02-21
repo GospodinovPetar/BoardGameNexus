@@ -1,10 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.urls import reverse
-from django.db.models import Q  # Import Q for complex lookups
-
 from events.forms import EventSearchForm, EventForm
 from events.models import Event
+from games.models import BoardGame
 
 
 def events_list(request):
@@ -63,7 +62,7 @@ def join_event(request, pk):
     joined_events = request.session.get("joined_events", [])
 
     if pk in joined_events:
-        messages.warning(request, "Вече сте се записали за това събитие!")
+        messages.warning(request, "You have already joined this event!")
         return redirect("events:events_list")
 
     if event.current_players < event.max_players:
@@ -72,10 +71,10 @@ def join_event(request, pk):
 
         joined_events.append(pk)
         request.session["joined_events"] = joined_events
-        messages.success(request, f"Успешно се присъединихте към {event.name}!")
+        messages.success(request, f"Successfully joined {event.name}!")
 
     else:
-        messages.error(request, "Съжаляваме, местата са запълнени.")
+        messages.error(request, "Sorry, all spots are filled.")
 
     return redirect("events:events_list")
 
@@ -87,12 +86,18 @@ def add_event(request):
             form.save()
             return redirect("events:events_list")
     else:
-        form = EventForm()
+        initial_data = {}
+        game_id = request.GET.get("game_id")
+        if game_id:
+            game = get_object_or_404(BoardGame, pk=game_id)
+            initial_data["games"] = [game]
+        form = EventForm(initial=initial_data)
 
     context = {
         "form": form,
-        "button_text": "Създай",
-        "page_title": f"Създаване на събитие",
+        "button_text": "Create",
+        "cancel_url": reverse("events:events_list"),
+        "page_title": "Create Event",
     }
     return render(request, "event_cud.html", context)
 
@@ -104,7 +109,7 @@ def edit_event(request, pk):
         form = EventForm(request.POST, instance=event)
         if form.is_valid():
             form.save()
-            messages.success(request, f"Успешно редактирахте {event.name}!")
+            messages.success(request, f"Successfully edited {event.name}!")
             return redirect("events:event_detail", pk=pk)
     else:
         form = EventForm(instance=event)
@@ -113,8 +118,9 @@ def edit_event(request, pk):
         "form": form,
         "event": event,
         "edit": True,
-        "page_title": f"Редактиране на {event.name}",
-        "button_text": "Редактирай",
+        "page_title": f"Edit {event.name}",
+        "button_text": "Edit",
+        "cancel_url": reverse("events:events_list"),
         "form_action_url": reverse("events:edit_event", kwargs={"pk": pk}),
     }
 
@@ -126,7 +132,7 @@ def delete_event(request, pk):
 
     if request.method == "POST":
         event.delete()
-        messages.success(request, f"Успешно изтрихте {event.name}!")
+        messages.success(request, f"Successfully deleted {event.name}!")
         return redirect("events:events_list")
     else:
         form = EventForm(instance=event)
@@ -138,9 +144,10 @@ def delete_event(request, pk):
         "event": event,
         "delete": True,
         "form_action_url": reverse("events:delete_event", kwargs={"pk": pk}),
-        "button_text": "Изтрий",
-        "page_title": f"Изтрий {event.name}",
-        "confirm_message": f"Сигурни ли сте, че искате да изтриете {event.name}? Това действие не може да бъде отменено!",
+        "button_text": "Delete",
+        "page_title": f"Delete {event.name}",
+        "cancel_url": reverse("events:events_list"),
+        "confirm_message": f"Are you sure you want to delete {event.name}? This action cannot be undone!",
     }
 
     return render(request, "event_cud.html", context)

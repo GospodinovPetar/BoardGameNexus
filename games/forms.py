@@ -29,9 +29,7 @@ class GameSearchForm(forms.Form):
     max_rating = forms.FloatField(
         required=False,
         label="Максимален рейтинг",
-        widget=forms.NumberInput(
-            attrs={"placeholder": "10.0", "class": "form-control"}
-        ),
+        widget=forms.NumberInput(attrs={"placeholder": "5.0", "class": "form-control"}),
     )
     min_players = forms.IntegerField(
         required=False,
@@ -40,7 +38,7 @@ class GameSearchForm(forms.Form):
     )
     max_players = forms.IntegerField(
         required=False,
-        label="Макс. брой играчи",
+        label="Максимален брой играчи",
         widget=forms.NumberInput(attrs={"placeholder": "100", "class": "form-control"}),
     )
     release_date_before = forms.DateField(
@@ -93,24 +91,16 @@ class GameForm(forms.ModelForm):
                 attrs={"class": "form-control", "type": "date"}
             ),
             "title": forms.TextInput(
-                attrs={"placeholder": "Как ще кръстиш новата игра? Нещо незабравимо!"}
+                attrs={"placeholder": "What's the name of the game?"}
             ),
             "rating": forms.NumberInput(
-                attrs={"placeholder": "Колко звезди от 0 до 5?"}
+                attrs={"placeholder": "Whats the rating? (0/5)"}
             ),
-            "min_players": forms.NumberInput(
-                attrs={"placeholder": "Минимум колко героя са нужни?"}
-            ),
-            "max_players": forms.NumberInput(
-                attrs={"placeholder": "Максимум колко могат да се включат?"}
-            ),
-            "description": forms.Textarea(
-                attrs={"placeholder": "Опиши тази игра като епичен разказ!"}
-            ),
+            "min_players": forms.NumberInput(attrs={"placeholder": "Min. Players"}),
+            "max_players": forms.NumberInput(attrs={"placeholder": "Max. Players"}),
+            "description": forms.Textarea(attrs={"placeholder": "Description"}),
             "image_url": forms.URLInput(
-                attrs={
-                    "placeholder": "Линк към обложката на играта (или остави празно за стандартна)"
-                }
+                attrs={"placeholder": "URL to the game's photo"}
             ),
         }
 
@@ -125,21 +115,21 @@ class GameForm(forms.ModelForm):
             if min_players > max_players:
                 self.add_error(
                     "min_players",
-                    "Минималният брой играчи не може да бъде по-голям от максималния.",
+                    "Minimum players can't be more than maximum players.",
                 )
                 self.add_error(
                     "max_players",
-                    "Максималният брой играчи не може да бъде по-малък от минималния.",
+                    "Maximum players can't be less than minimum players.",
                 )
 
         if rating is not None:
             if rating < 0 or rating > 5:
-                self.add_error("rating", "Скалата на рейтинга е от 0 до 5")
+                self.add_error("rating", "Rating is only from 0 to 5")
 
         if release_date is not None:
             if release_date > datetime.date.today():
                 self.add_error(
-                    "release_date", "Датата на издаване не може да е в бъдещето."
+                    "release_date", "Release date can't be in the future."
                 )
 
         return cleaned_data

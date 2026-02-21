@@ -8,10 +8,10 @@ class EventSearchForm(forms.Form):
     name = forms.CharField(
         max_length=100,
         required=False,
-        label="Име на събитие",
+        label="Event Name",
         widget=forms.TextInput(
             attrs={
-                "placeholder": "Търсене по име на събитие...",
+                "placeholder": "Search by event name...",
                 "class": "form-control",
             }
         ),
@@ -19,39 +19,39 @@ class EventSearchForm(forms.Form):
     organizer_name = forms.CharField(
         max_length=100,
         required=False,
-        label="Организатор",
+        label="Organizer",
         widget=forms.TextInput(
             attrs={
-                "placeholder": "Име на организатор...",
+                "placeholder": "Organizer name...",
                 "class": "form-control",
             }
         ),
     )
     location = forms.MultipleChoiceField(
         required=False,
-        label="Локация",
+        label="Location",
         widget=forms.CheckboxSelectMultiple,
     )
     min_players = forms.IntegerField(
         required=False,
-        label="Мин. играчи",
+        label="Min. Players",
         widget=forms.NumberInput(attrs={"placeholder": "1", "class": "form-control"}),
     )
     max_players = forms.IntegerField(
         required=False,
-        label="Макс. играчи",
+        label="Max. Players",
         widget=forms.NumberInput(attrs={"placeholder": "100", "class": "form-control"}),
     )
     date_time_before = forms.DateTimeField(
         required=False,
-        label="Преди дата и час",
+        label="Before Date and Time",
         widget=forms.DateTimeInput(
             attrs={"type": "datetime-local", "class": "form-control"}
         ),
     )
     date_time_after = forms.DateTimeField(
         required=False,
-        label="След дата и час",
+        label="After Date and Time",
         widget=forms.DateTimeInput(
             attrs={"type": "datetime-local", "class": "form-control"}
         ),
@@ -59,7 +59,7 @@ class EventSearchForm(forms.Form):
     games = forms.ModelMultipleChoiceField(
         queryset=BoardGame.objects.all(),
         required=False,
-        label="Игри",
+        label="Games",
         widget=forms.CheckboxSelectMultiple,
     )
 
@@ -71,23 +71,23 @@ class EventSearchForm(forms.Form):
         ]
 
     SORT_CHOICES = [
-        ("name", "Име (А-Я)"),
-        ("-name", "Име (Я-А)"),
-        ("date_time", "Дата (стари първо)"),
-        ("-date_time", "Дата (нови първо)"),
-        ("organizer_name", "Организатор (А-Я)"),
-        ("-organizer_name", "Организатор (Я-А)"),
-        ("location", "Локация (А-Я)"),
-        ("-location", "Локация (Я-А)"),
-        ("current_players", "Текущи играчи (възходящ)"),
-        ("-current_players", "Текущи играчи (низходящ)"),
-        ("max_players", "Макс. играчи (възходящ)"),
-        ("-max_players", "Макс. играчи (низходящ)"),
+        ("name", "Name (A-Z)"),
+        ("-name", "Name (Z-A)"),
+        ("date_time", "Date (Oldest First)"),
+        ("-date_time", "Date (Newest First)"),
+        ("organizer_name", "Organizer (A-Z)"),
+        ("-organizer_name", "Organizer (Z-A)"),
+        ("location", "Location (A-Z)"),
+        ("-location", "Location (Z-A)"),
+        ("current_players", "Current Players (Asc)"),
+        ("-current_players", "Current Players (Desc)"),
+        ("max_players", "Max Players (Asc)"),
+        ("-max_players", "Max Players (Desc)"),
     ]
     sort_by = forms.ChoiceField(
         choices=SORT_CHOICES,
         required=False,
-        label="Сортирай по",
+        label="Sort By",
         widget=forms.Select(attrs={"class": "form-select"}),
     )
 
@@ -106,40 +106,28 @@ class EventForm(forms.ModelForm):
             "games",
         ]
         widgets = {
-            "date_time": forms.DateInput(
-                attrs={"class": "form-control", "type": "date"}
+            "date_time": forms.DateTimeInput(
+                attrs={"class": "form-control", "type": "datetime-local"}
             ),
             "name": forms.TextInput(
-                attrs={"placeholder": "Как ще кръстиш събитието? Бъди креативен!"}
+                attrs={"placeholder": "What will you call the event? Be creative!"}
             ),
             "organizer_name": forms.TextInput(
-                attrs={"placeholder": "Кой организира купона?"}
+                attrs={"placeholder": "Who's organizing the party?"}
             ),
             "location": forms.TextInput(
-                attrs={"placeholder": "Къде ще се вихри забавлението?"}
+                attrs={"placeholder": "Where will the fun be happening?"}
             ),
             "current_players": forms.NumberInput(
-                attrs={"placeholder": "Колко героя вече са се записали?"}
+                attrs={"placeholder": "How many heroes have already signed up?"}
             ),
             "max_players": forms.NumberInput(
-                attrs={"placeholder": "Колко максимум могат да се включат?"}
+                attrs={"placeholder": "How many can join at most?"}
             ),
             "description": forms.Textarea(
-                attrs={"placeholder": "Разкажи повече за епичното събитие!"}
+                attrs={"placeholder": "Tell us more about the epic event!"}
             ),
-            "games": forms.SelectMultiple(
-                attrs={"placeholder": "Кои игри ще спасят положението?"}
-            ),
-        }
-        labels = {
-            "name": "Заглавие",
-            "organizer_name": "Организатор",
-            "date_time": "Дата на провеждане",
-            "location": "Къде?",
-            "current_players": "Играчи",
-            "max_players": "Максимални играчи",
-            "description": "Описание",
-            "games": "Игри",
+            "games": forms.CheckboxSelectMultiple(),
         }
 
     def clean(self):
@@ -152,15 +140,15 @@ class EventForm(forms.ModelForm):
             if current_players > max_players:
                 self.add_error(
                     "current_players",
-                    "Сегашните играчи надхвърлят максималния брой играчи.",
+                    "Current players cannot exceed maximum players.",
                 )
                 self.add_error(
                     "max_players",
-                    "Максималния брой играчи не може да е по-малък от сегашния.",
+                    "Maximum players cannot be less than current players.",
                 )
 
         if date_time is not None:
             if date_time < now():
-                self.add_error("date_time", "Датата не може да бъде в миналото.")
+                self.add_error("date_time", "Date cannot be in the past.")
 
         return cleaned_data

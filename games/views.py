@@ -69,6 +69,7 @@ def add_game(request):
         "form": form,
         "page_title": "Добави нова игра",
         "button_text": "Добави",
+        "cancel_url": reverse("games:games"),
         "form_action_url": reverse("games:add_game"),
     }
 
@@ -91,6 +92,7 @@ def edit_game(request, pk):
         "edit": True,
         "page_title": f"Редактиране на {game.title}",
         "button_text": "Редактирай",
+        "cancel_url": reverse("games:games"),
         "form_action_url": reverse("games:edit_game", kwargs={"pk": pk}),
     }
 
@@ -115,6 +117,7 @@ def delete_game(request, pk):
         "form_action_url": reverse("games:delete_game", kwargs={"pk": pk}),
         "button_text": "Изтрий",
         "page_title": f"Изтрий {game.title}",
+        "cancel_url": reverse("games:games"),
         "confirm_message": f'Сигурни ли сте, че искате да изтриете "{game.title}"? Това действие не може да бъде отменено!',
     }
 

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load game_filters %}
 
 {% block title %}{{ game.title }} - Details{% endblock %}
 
@@ -26,7 +27,7 @@
                             <i class="bi bi-controller"></i> <strong>Genre:</strong> {{ game.genre.name }}
                         </li>
                         <li class="list-group-item text-start">
-                            <i class="bi bi-people-fill"></i> <strong>Players:</strong> {{ game.min_players }} - {{ game.max_players }}
+                            <i class="bi bi-people-fill"></i> <strong>Players:</strong> {{ game|player_range }}
                         </li>
                         <li class="list-group-item text-start d-flex flex-column">
                             <div>
@@ -67,7 +68,7 @@
                     </a>
                 </div>
                 <div class="col">
-                    <a href="#" class="btn btn-primary btn-action-uniform w-100">
+                    <a href="{% url 'events:add_event' %}?game_id={{ game.pk }}" class="btn btn-primary btn-action-uniform w-100">
                         <i class="bi bi-calendar-plus me-2"></i> Create Event
                     </a>
                 </div>
