@@ -67,8 +67,8 @@ def add_game(request):
 
     context = {
         "form": form,
-        "page_title": "Добави нова игра",
-        "button_text": "Добави",
+        "page_title": "Add a new game",
+        "button_text": "Add",
         "cancel_url": reverse("games:games"),
         "form_action_url": reverse("games:add_game"),
     }
@@ -90,9 +90,9 @@ def edit_game(request, pk):
         "form": form,
         "game": game,
         "edit": True,
-        "page_title": f"Редактиране на {game.title}",
-        "button_text": "Редактирай",
-        "cancel_url": reverse("games:games"),
+        "page_title": f"Editing {game.title}",
+        "button_text": "Edit",
+        "cancel_url": reverse("games:game_details", kwargs={"pk": pk}),
         "form_action_url": reverse("games:edit_game", kwargs={"pk": pk}),
     }
 
@@ -108,17 +108,17 @@ def delete_game(request, pk):
     else:
         form = GameForm(instance=game)
         for field in form.fields.values():
-            field.widget.attrs["readonly"] = "readonly"
+            field.widget.attrs["disabled"] = "disabled"
 
     context = {
         "form": form,
         "game": game,
         "delete": True,
         "form_action_url": reverse("games:delete_game", kwargs={"pk": pk}),
-        "button_text": "Изтрий",
-        "page_title": f"Изтрий {game.title}",
-        "cancel_url": reverse("games:games"),
-        "confirm_message": f'Сигурни ли сте, че искате да изтриете "{game.title}"? Това действие не може да бъде отменено!',
+        "button_text": "Delete",
+        "page_title": f"Delete {game.title}",
+        "cancel_url": reverse("games:game_details", kwargs={"pk": pk}),
+        "confirm_message": f'Are you sure you want to delete "{game.title}"? This action cannot be undone!',
     }
 
     return render(request, "game_cud.html", context)

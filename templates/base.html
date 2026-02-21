@@ -27,10 +27,16 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.app_name == 'web' and request.resolver_match.url_name == 'index' %}active{% endif %}" {% if request.resolver_match.app_name == 'web' and request.resolver_match.url_name == 'index' %}aria-current="page"{% endif %} href={% url 'web:index' %}>Home</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.app_name == 'games' and request.resolver_match.url_name == 'games' %}active{% endif %}" {% if request.resolver_match.app_name == 'games' and request.resolver_match.url_name == 'games' %}aria-current="page"{% endif %} href={% url 'games:games' %}>All Games</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.app_name == 'events' and request.resolver_match.url_name == 'events_list' %}active{% endif %}" {% if request.resolver_match.app_name == 'events' and request.resolver_match.url_name == 'events_list' %}aria-current="page"{% endif %} href={% url 'events:events_list' %}>Events</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.app_name == 'web' and request.resolver_match.url_name == 'mission' %}active{% endif %}" {% if request.resolver_match.app_name == 'web' and request.resolver_match.url_name == 'mission' %}aria-current="page"{% endif %} href={% url 'web:mission' %}>Our Mission</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.app_name == 'web' and request.resolver_match.url_name == 'contact' %}active{% endif %}" {% if request.resolver_match.app_name == 'web' and request.resolver_match.url_name == 'contact' %}aria-current="page"{% endif %} href={% url 'web:contact' %}>Contact Us</a>

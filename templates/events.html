@@ -101,10 +101,17 @@
     </div>
     {% else %}
     <div class="text-center my-5 p-4 empty-events-message">
-        <p class="lead text-white-50 mb-3">No active events yet. Be the first!</p>
-        <a class="btn btn-create-event btn-lg" href="{% url 'events:add_event' %}">
-            <i class="bi bi-calendar-plus me-2"></i> Create the First Event
-        </a>
+        {% if request.GET %}
+            <p class="lead text-white-50 mb-3">No events match your search criteria.</p>
+            <a href="{% url 'events:events_list' %}" class="btn btn-outline-warning">
+                <i class="bi bi-x-circle me-2"></i> Clear Filters
+            </a>
+        {% else %}
+            <p class="lead text-white-50 mb-3">No active events yet. Be the first!</p>
+            <a class="btn btn-create-event btn-lg" href="{% url 'events:add_event' %}">
+                <i class="bi bi-calendar-plus me-2"></i> Create the First Event
+            </a>
+        {% endif %}
     </div>
     {% endif %}
 </div>

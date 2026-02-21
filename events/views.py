@@ -96,6 +96,7 @@ def add_event(request):
     context = {
         "form": form,
         "button_text": "Create",
+        "form_action_url": reverse("events:add_event"),
         "cancel_url": reverse("events:events_list"),
         "page_title": "Create Event",
     }
@@ -120,7 +121,7 @@ def edit_event(request, pk):
         "edit": True,
         "page_title": f"Edit {event.name}",
         "button_text": "Edit",
-        "cancel_url": reverse("events:events_list"),
+        "cancel_url": reverse("events:event_detail", kwargs={"pk": pk}),
         "form_action_url": reverse("events:edit_event", kwargs={"pk": pk}),
     }
 
@@ -137,7 +138,7 @@ def delete_event(request, pk):
     else:
         form = EventForm(instance=event)
         for field in form.fields.values():
-            field.widget.attrs["readonly"] = "readonly"
+            field.widget.attrs["disabled"] = "disabled"
 
     context = {
         "form": form,
@@ -146,7 +147,7 @@ def delete_event(request, pk):
         "form_action_url": reverse("events:delete_event", kwargs={"pk": pk}),
         "button_text": "Delete",
         "page_title": f"Delete {event.name}",
-        "cancel_url": reverse("events:events_list"),
+        "cancel_url": reverse("events:event_detail", kwargs={"pk": pk}),
         "confirm_message": f"Are you sure you want to delete {event.name}? This action cannot be undone!",
     }
 

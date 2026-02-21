@@ -7,10 +7,10 @@ class GameSearchForm(forms.Form):
     title = forms.CharField(
         max_length=200,
         required=False,
-        label="",  # Set label to empty string
+        label="",
         widget=forms.TextInput(
             attrs={
-                "placeholder": "Търсене по заглавие на игра...",
+                "placeholder": "Search by title",
                 "class": "form-control",
             }
         ),
@@ -18,57 +18,57 @@ class GameSearchForm(forms.Form):
     genre = forms.ModelMultipleChoiceField(
         queryset=Genre.objects.all(),
         required=False,
-        label="Жанр",
+        label="Genre",
         widget=forms.CheckboxSelectMultiple,
     )
     min_rating = forms.FloatField(
         required=False,
-        label="Минимален рейтинг",
+        label="Min. Rating",
         widget=forms.NumberInput(attrs={"placeholder": "0.0", "class": "form-control"}),
     )
     max_rating = forms.FloatField(
         required=False,
-        label="Максимален рейтинг",
+        label="Max. Rating",
         widget=forms.NumberInput(attrs={"placeholder": "5.0", "class": "form-control"}),
     )
     min_players = forms.IntegerField(
         required=False,
-        label="Минимален брой играчи",
+        label="Min. Players",
         widget=forms.NumberInput(attrs={"placeholder": "1", "class": "form-control"}),
     )
     max_players = forms.IntegerField(
         required=False,
-        label="Максимален брой играчи",
+        label="Max. Players",
         widget=forms.NumberInput(attrs={"placeholder": "100", "class": "form-control"}),
     )
     release_date_before = forms.DateField(
         required=False,
-        label="Издадена преди",
+        label="Released before",
         widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
     )
     release_date_after = forms.DateField(
         required=False,
-        label="Издадена след",
+        label="Released after",
         widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
     )
 
     SORT_CHOICES = [
-        ("title", "Заглавие (А-Я)"),
-        ("-title", "Заглавие (Я-А)"),
-        ("rating", "Рейтинг (възходящ)"),
-        ("-rating", "Рейтинг (низходящ)"),
-        ("release_date", "Дата на издаване (най-стари)"),
-        ("-release_date", "Дата на издаване (най-нови)"),
-        ("min_players", "Мин. играчи (възходящ)"),
-        ("-min_players", "Мин. играчи (низходящ)"),
-        ("max_players", "Макс. играчи (възходящ)"),
-        ("-max_players", "Макс. играчи (низходящ)"),
+        ("title", "Title (A-Z)"),
+        ("-title", "Title (Z-A)"),
+        ("rating", "Rating (Asc.)"),
+        ("-rating", "Rating (Desc.)"),
+        ("release_date", "Release Date (Oldest First)"),
+        ("-release_date", "Release Date (Newest First)"),
+        ("min_players", "Min. Players (Asc.)"),
+        ("-min_players", "Min. Players (Desc.)"),
+        ("max_players", "Max. Players (Asc.)"),
+        ("-max_players", "Max. Players (Desc.)"),
     ]
 
     sort_by = forms.ChoiceField(
         choices=SORT_CHOICES,
         required=False,
-        label="Сортирай по",
+        label="Sort by:",
         widget=forms.Select(attrs={"class": "form-select"}),
     )
 
@@ -128,8 +128,6 @@ class GameForm(forms.ModelForm):
 
         if release_date is not None:
             if release_date > datetime.date.today():
-                self.add_error(
-                    "release_date", "Release date can't be in the future."
-                )
+                self.add_error("release_date", "Release date can't be in the future.")
 
         return cleaned_data
