@@ -415,10 +415,6 @@ body {
 }
 
 /* Footer Modernization */
-.footer {
-    border-top: 5px solid var(--bs-primary); /* A distinct line at the top of the footer */
-    /* Add some padding to the bottom for overall spacing, already handled by pb-4 in HTML */
-}
 
 .footer h5 {
     letter-spacing: 0.05em; /* Slightly more spaced out headings */

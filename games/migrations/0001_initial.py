@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("title", models.CharField(max_length=200)),
+                ("title", models.CharField(max_length=200, unique=True)),
                 ("release_date", models.DateField(blank=True, null=True)),
                 (
                     "rating",
@@ -50,7 +50,7 @@ class Migration(migrations.Migration):
                         default=0.0,
                         validators=[
                             django.core.validators.MinValueValidator(0.0),
-                            django.core.validators.MaxValueValidator(10.0),
+                            django.core.validators.MaxValueValidator(5.0),
                         ],
                     ),
                 ),
@@ -66,7 +66,7 @@ class Migration(migrations.Migration):
                         validators=[django.core.validators.MaxValueValidator(100)]
                     ),
                 ),
-                ("description", models.TextField()),
+                ("description", models.TextField(blank=True, null=True)),
                 ("image_url", models.URLField(blank=True, null=True)),
                 (
                     "genre",
