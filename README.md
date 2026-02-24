@@ -91,6 +91,7 @@ All pages extend `base.html`. Create/Edit/Delete for both games and events share
 Custom template filters are in `games/templatetags/game_filters.py`:
 - `player_range` - formats min/max players as "2 - 4 players", used in game cards and detail page
 - `is_event_full` - returns True if an event has no free spots, used to show a "Full" badge on event cards
+- `dont_include_page` - removes a specified field from the query string
 
 ---
 
