@@ -1,12 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger # Import pagination classes
 
 from games.models import BoardGame
 from .forms import GameSearchForm, GameForm
 
 
 def get_all_games(request):
-    games = BoardGame.objects.all()
+    games_list = BoardGame.objects.all()
     form = GameSearchForm(request.GET)
 
     if form.is_valid():
@@ -21,24 +22,34 @@ def get_all_games(request):
         sort_by = form.cleaned_data.get("sort_by")
 
         if title:
-            games = games.filter(title__icontains=title)
+            games_list = games_list.filter(title__icontains=title)
         if genres:
-            games = games.filter(genre__in=genres)
+            games_list = games_list.filter(genre__in=genres)
         if min_rating is not None:
-            games = games.filter(rating__gte=min_rating)
+            games_list = games_list.filter(rating__gte=min_rating)
         if max_rating is not None:
-            games = games.filter(rating__lte=max_rating)
+            games_list = games_list.filter(rating__lte=max_rating)
         if min_players is not None:
-            games = games.filter(min_players__gte=min_players)
+            games_list = games_list.filter(min_players__gte=min_players)
         if max_players is not None:
-            games = games.filter(max_players__lte=max_players)
+            games_list = games_list.filter(max_players__lte=max_players)
         if release_date_before:
-            games = games.filter(release_date__lte=release_date_before)
+            games_list = games_list.filter(release_date__lte=release_date_before)
         if release_date_after:
-            games = games.filter(release_date__gte=release_date_after)
+            games_list = games_list.filter(release_date__gte=release_date_after)
 
         if sort_by:
-            games = games.order_by(sort_by)
+            games_list = games_list.order_by(sort_by)
+    
+    paginator = Paginator(games_list, 6)
+    page = request.GET.get("page")
+
+    try:
+        games = paginator.page(page)
+    except PageNotAnInteger:
+        games = paginator.page(1)
+    except EmptyPage:
+        games = paginator.page(paginator.num_pages)
 
     context = {
         "games": games,

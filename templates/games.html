@@ -173,5 +173,7 @@
         {% endfor %}
     </div>
     {% endif %}
+
+    {% include '_pagination.html' with page_obj=games %}
 </div>
 {% endblock %}

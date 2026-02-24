@@ -36,6 +36,7 @@ A small extra I liked: when you open "Create Event" from a game's detail page, t
 ```bash
 git clone https://github.com/your-username/BoardGameNexus.git
 cd BoardGameNexus
+cp .env.example .env
 
 python -m venv .venv
 source .venv/bin/activate      # Windows: .venv\Scripts\activate
@@ -43,16 +44,7 @@ source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Create a `.env` file in the project root (same folder as `manage.py`):
-
-```
-SECRET_KEY=your-secret-key-here
-DB_NAME=your_database_name
-DB_USER=your_postgres_username
-DB_PASSWORD=your_postgres_password
-DB_HOST=127.0.0.1
-DB_PORT=5432
-```
+Populate your .env file accordingly.
 
 ```bash
 python manage.py migrate

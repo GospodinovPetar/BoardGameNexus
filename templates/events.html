@@ -114,5 +114,7 @@
         {% endif %}
     </div>
     {% endif %}
+
+    {% include '_pagination.html' with page_obj=events %}
 </div>
 {% endblock %}

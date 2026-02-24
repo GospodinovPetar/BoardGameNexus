@@ -1,13 +1,14 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.urls import reverse
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger # Import pagination classes
 from events.forms import EventSearchForm, EventForm
 from events.models import Event
 from games.models import BoardGame
 
 
 def events_list(request):
-    events = Event.objects.all()
+    events_list = Event.objects.all() # Rename 'events' to 'events_list' for pagination
     form = EventSearchForm(request.GET)
 
     if form.is_valid():
@@ -22,24 +23,34 @@ def events_list(request):
         sort_by = form.cleaned_data.get("sort_by")
 
         if name:
-            events = events.filter(name__icontains=name)
+            events_list = events_list.filter(name__icontains=name)
         if organizer_name:
-            events = events.filter(organizer_name__icontains=organizer_name)
+            events_list = events_list.filter(organizer_name__icontains=organizer_name)
         if locations:
-            events = events.filter(location__in=locations)
+            events_list = events_list.filter(location__in=locations)
         if min_players is not None:
-            events = events.filter(current_players__gte=min_players)
+            events_list = events_list.filter(current_players__gte=min_players)
         if max_players is not None:
-            events = events.filter(max_players__lte=max_players)
+            events_list = events_list.filter(max_players__lte=max_players)
         if date_time_before:
-            events = events.filter(date_time__lte=date_time_before)
+            events_list = events_list.filter(date_time__lte=date_time_before)
         if date_time_after:
-            events = events.filter(date_time__gte=date_time_after)
+            events_list = events_list.filter(date_time__gte=date_time_after)
         if games:
-            events = events.filter(games__in=games).distinct()
+            events_list = events_list.filter(games__in=games).distinct()
 
         if sort_by:
-            events = events.order_by(sort_by)
+            events_list = events_list.order_by(sort_by)
+    
+    paginator = Paginator(events_list, 6)
+    page = request.GET.get("page")
+
+    try:
+        events = paginator.page(page)
+    except PageNotAnInteger:
+        events = paginator.page(1)
+    except EmptyPage:
+        events = paginator.page(paginator.num_pages)
 
     context = {
         "events": events,
