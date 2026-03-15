@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger # Import pagination classes
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from games.models import BoardGame
 from .forms import GameSearchForm, GameForm

@@ -1,0 +1,22 @@
+[
+  {"model": "games.genre", "pk": 1, "fields": {"name": "Strategy"}},
+  {"model": "games.genre", "pk": 2, "fields": {"name": "Family"}},
+  {"model": "games.genre", "pk": 3, "fields": {"name": "Party"}},
+  {"model": "games.genre", "pk": 4, "fields": {"name": "Cooperative"}},
+  {"model": "games.genre", "pk": 5, "fields": {"name": "Deck Building"}},
+  {"model": "games.genre", "pk": 6, "fields": {"name": "Roll and Write"}},
+  {"model": "games.genre", "pk": 7, "fields": {"name": "Trivia"}},
+  {"model": "games.genre", "pk": 8, "fields": {"name": "Wargame"}},
+  {"model": "games.genre", "pk": 9, "fields": {"name": "RPG"}},
+  {"model": "games.genre", "pk": 10, "fields": {"name": "Puzzle"}},
+
+  {"model": "games.boardgame", "pk": 1, "fields": {"title": "Catan", "genre": 1, "release_date": "1995-01-01", "rating": 4.2, "min_players": 3, "max_players": 4, "description": "Trade, build and settle the island of Catan in this classic strategy game.", "image_url": "https://cdn.ozone.bg/media/catalog/product/cache/1/image/9df78eab33525d08d6e5fb8d27136e95/n/a/84d6a378198a67d82d1d952fa3b90438/nastolna-igra-catan---semeyna-30.jpg"}},
+  {"model": "games.boardgame", "pk": 2, "fields": {"title": "Ticket to Ride", "genre": 2, "release_date": "2004-01-01", "rating": 4.3, "min_players": 2, "max_players": 5, "description": "Collect train cards and claim railway routes across the country.", "image_url": "https://s13emagst.akamaized.net/products/3989/3988429/images/res_d1882877b7f8a82fedbaa6d7d859bdb9.jpg"}},
+  {"model": "games.boardgame", "pk": 3, "fields": {"title": "Codenames", "genre": 3, "release_date": "2015-01-01", "rating": 4.4, "min_players": 2, "max_players": 8, "description": "Two rival spymasters know the secret identities of 25 agents. Give one-word clues.", "image_url": "https://cdn.ozone.bg/media/catalog/product/cache/1/image/9df78eab33525d08d6e5fb8d27136e95/n/a/3d78d544a9a8abbcad7fbea9253f711f/nastolna-igra-codenames---parti-angliysko-izdanie-30.jpg"}},
+  {"model": "games.boardgame", "pk": 4, "fields": {"title": "Pandemic", "genre": 4, "release_date": "2008-01-01", "rating": 4.5, "min_players": 2, "max_players": 4, "description": "Work together to stop four deadly diseases from spreading across the globe.", "image_url": "https://upload.wikimedia.org/wikipedia/en/3/36/Pandemic_game.jpg"}},
+  {"model": "games.boardgame", "pk": 5, "fields": {"title": "Dominion", "genre": 5, "release_date": "2008-01-01", "rating": 4.1, "min_players": 2, "max_players": 4, "description": "The first deck-building game. Build your kingdom card by card.", "image_url": "https://cdn.ozone.bg/media/catalog/product/cache/1/image/9df78eab33525d08d6e5fb8d27136e95/n/a/f2edac87c8aba4a30413595d10e5ea36/nastolna-igra-dominion-2nd-edition---strategicheska-30.jpg"}},
+
+  {"model": "events.event", "pk": 1, "fields": {"name": "Catan Night", "description": "A relaxed evening of trading and building on the island of Catan. Beginners welcome!", "date_time": "2026-06-15T18:00:00+03:00", "location": "Sofia, Game Store Lvl Up", "organizer_name": "Petar G.", "current_players": 2, "max_players": 4, "games": [1]}},
+  {"model": "events.event", "pk": 2, "fields": {"name": "Pandemic Co-op Session", "description": "Can we save the world together? Join us for an intense cooperative session.", "date_time": "2026-06-20T17:30:00+03:00", "location": "Plovdiv, Board Game Cafe", "organizer_name": "Maria K.", "current_players": 1, "max_players": 4, "games": [4]}},
+  {"model": "events.event", "pk": 3, "fields": {"name": "Game Night Extravaganza", "description": "We play everything — Codenames, Ticket to Ride, Dominion. Bring snacks!", "date_time": "2026-07-05T19:00:00+03:00", "location": "Varna, Community Center", "organizer_name": "Alex T.", "current_players": 3, "max_players": 8, "games": [2, 3, 5]}}
+]

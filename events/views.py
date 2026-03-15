@@ -1,14 +1,14 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.urls import reverse
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger # Import pagination classes
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from events.forms import EventSearchForm, EventForm
 from events.models import Event
 from games.models import BoardGame
 
 
 def events_list(request):
-    events_list = Event.objects.all() # Rename 'events' to 'events_list' for pagination
+    events_list = Event.objects.all()
     form = EventSearchForm(request.GET)
 
     if form.is_valid():
@@ -85,7 +85,7 @@ def join_event(request, pk):
         messages.success(request, f"Successfully joined {event.name}!")
 
     else:
-        messages.error(request, "Sorry, all spots are filled.")
+        messages.info(request, "Sorry, all spots are filled.")
 
     return redirect("events:event_detail", pk=pk)
 

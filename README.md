@@ -48,8 +48,12 @@ Populate your .env file accordingly.
 
 ```bash
 python manage.py migrate
+python manage.py loaddata initial_data.json
 python manage.py createsuperuser   # for admin access
 python manage.py runserver
+```
+```bash 
+CRITICAL -> DO NOT DELETE THE FIXTURES FILES IF YOU WANT POPULATED GENRES (OTHERWISE ADD THEM MANUALLY FROM ADMIN PANEL)
 ```
 
 App runs at `http://127.0.0.1:8000/`
