@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Log in — BoardGame Nexus{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-5">
+        <h1 class="h3 mb-3">Log in</h1>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% crispy form %}
+            <div class="d-grid gap-2 mt-3">
+                <button type="submit" class="btn btn-primary">Log in</button>
+            </div>
+        </form>
+        <p class="mt-3 text-muted">New here? <a href="{% url 'accounts:register' %}">Create an account</a></p>
+    </div>
+</div>
+{% endblock %}

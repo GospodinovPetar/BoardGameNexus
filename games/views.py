@@ -40,7 +40,7 @@ def get_all_games(request):
 
         if sort_by:
             games_list = games_list.order_by(sort_by)
-    
+
     paginator = Paginator(games_list, 6)
     page = request.GET.get("page")
 

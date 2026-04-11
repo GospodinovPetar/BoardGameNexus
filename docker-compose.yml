@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-boardgamenexus}
+      POSTGRES_USER: ${DB_USER:-boardgame}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-boardgame}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\" || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  web:
+    build: .
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             exec python manage.py runserver 0.0.0.0:8000"
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-docker-dev-only-change-me}
+      DB_NAME: ${DB_NAME:-boardgamenexus}
+      DB_USER: ${DB_USER:-boardgame}
+      DB_PASSWORD: ${DB_PASSWORD:-boardgame}
+      DB_HOST: db
+      DB_PORT: ${DB_PORT:-5432}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,web}
+    volumes:
+      - ./media:/app/media
+      - ./staticfiles:/app/staticfiles
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

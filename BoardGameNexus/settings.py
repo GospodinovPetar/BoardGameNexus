@@ -10,10 +10,15 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+_allowed = os.environ.get("ALLOWED_HOSTS", "").strip()
+if _allowed:
+    ALLOWED_HOSTS = [h.strip() for h in _allowed.split(",") if h.strip()]
+else:
+    ALLOWED_HOSTS = []
 
 
 PROJECT_APPS = [
+    "accounts",
     "events",
     "games",
     "web",
@@ -115,3 +120,14 @@ STATIC_ROOT = BASE_DIR / "staticfiles"  # Use 'staticfiles' for collected files
 STATICFILES_DIRS = [
     BASE_DIR / "static",  # This is where you put your project-wide static files
 ]
+
+AUTH_USER_MODEL = "accounts.CustomUser"
+
+LOGIN_URL = "/accounts/login/"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

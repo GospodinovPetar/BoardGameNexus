@@ -41,7 +41,7 @@ def events_list(request):
 
         if sort_by:
             events_list = events_list.order_by(sort_by)
-    
+
     paginator = Paginator(events_list, 6)
     page = request.GET.get("page")
 

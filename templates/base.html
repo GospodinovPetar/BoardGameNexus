@@ -41,6 +41,24 @@
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.app_name == 'web' and request.resolver_match.url_name == 'contact' %}active{% endif %}" {% if request.resolver_match.app_name == 'web' and request.resolver_match.url_name == 'contact' %}aria-current="page"{% endif %} href={% url 'web:contact' %}>Contact Us</a>
                         </li>
+                        {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.app_name == 'accounts' and request.resolver_match.url_name == 'profile' %}active{% endif %}" {% if request.resolver_match.app_name == 'accounts' and request.resolver_match.url_name == 'profile' %}aria-current="page"{% endif %} href={% url 'accounts:profile' %}>Profile</a>
+                        </li>
+                        <li class="nav-item d-flex align-items-center">
+                            <form method="post" action={% url 'accounts:logout' %} class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-link nav-link text-white text-decoration-none py-2">Log out</button>
+                            </form>
+                        </li>
+                        {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.app_name == 'accounts' and request.resolver_match.url_name == 'login' %}active{% endif %}" {% if request.resolver_match.app_name == 'accounts' and request.resolver_match.url_name == 'login' %}aria-current="page"{% endif %} href={% url 'accounts:login' %}>Log in</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.app_name == 'accounts' and request.resolver_match.url_name == 'register' %}active{% endif %}" {% if request.resolver_match.app_name == 'accounts' and request.resolver_match.url_name == 'register' %}aria-current="page"{% endif %} href={% url 'accounts:register' %}>Register</a>
+                        </li>
+                        {% endif %}
                     </ul>
                 </div>
             </div>
