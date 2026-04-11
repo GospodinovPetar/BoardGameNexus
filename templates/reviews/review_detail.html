@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ review.title }} — Review{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="mx-auto col-lg-8">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'reviews:reviews_list' %}">Reviews</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'games:game_details' review.game.pk %}">{{ review.game.title }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ review.title|truncatewords:6 }}</li>
+            </ol>
+        </nav>
+
+        <article class="card shadow-sm border-secondary">
+            <div class="card-body p-4">
+                <header class="mb-4">
+                    <h1 class="h2 mb-2">{{ review.title }}</h1>
+                    <div class="d-flex align-items-center gap-3 flex-wrap text-muted mb-0">
+                        {% include "reviews/_review_author_avatar.html" with user_obj=review.author size=48 %}
+                        <div>
+                            <div class="d-flex align-items-center flex-wrap gap-2">
+                                <span class="fw-semibold text-body">{{ review.author.username }}</span>
+                                <span class="badge bg-warning text-dark">{{ review.rating }} / 5</span>
+                            </div>
+                            <p class="mb-0 small">
+                                <i class="bi bi-dice-5 me-1"></i>
+                                <a href="{% url 'games:game_details' review.game.pk %}">{{ review.game.title }}</a>
+                            </p>
+                        </div>
+                    </div>
+                    <p class="small text-muted mt-2 mb-0">
+                        Posted {{ review.created_at|date:"M j, Y, H:i" }}
+                        {% if review.updated_at != review.created_at %}
+                            · Updated {{ review.updated_at|date:"M j, Y, H:i" }}
+                        {% endif %}
+                    </p>
+                </header>
+                <div class="review-body">
+                    {{ review.content|linebreaks }}
+                </div>
+            </div>
+        </article>
+
+        {% if can_edit_review %}
+            <div class="d-flex flex-wrap gap-2 mt-4">
+                <a href="{% url 'reviews:edit_review' review.pk %}" class="btn btn-primary">
+                    <i class="bi bi-pencil me-1"></i>Edit
+                </a>
+                <a href="{% url 'reviews:delete_review' review.pk %}" class="btn btn-outline-danger">
+                    <i class="bi bi-trash me-1"></i>Delete
+                </a>
+            </div>
+        {% endif %}
+
+        <div class="mt-4">
+            <a href="{% url 'games:game_details' review.game.pk %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Back to game
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

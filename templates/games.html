@@ -160,8 +160,8 @@
                         <span><i class="bi bi-tag-fill"></i> Genre: {{ game.genre.name }}</span>
                         <span><i class="bi bi-people-fill"></i> {{ game|player_range }}</span>
                         <span>
-                            <i class="bi bi-star-fill"></i> Rating: {{ game.rating }} / 5.0
-                            {% if game.rating > 4.5 %} <span class="badge bg-warning text-dark ms-2">Top!</span>{% endif %}
+                            <i class="bi bi-star-fill"></i> Community: {{ game.review_avg|floatformat:1 }} / 5.0
+                            {% if game.review_avg > 4.5 %} <span class="badge bg-warning text-dark ms-2">Top!</span>{% endif %}
                         </span>
                     </div>
                     <div class="mt-auto">

@@ -23,12 +23,12 @@ class GameSearchForm(forms.Form):
     )
     min_rating = forms.FloatField(
         required=False,
-        label="Min. Rating",
+        label="Min. community rating",
         widget=forms.NumberInput(attrs={"placeholder": "0.0", "class": "form-control"}),
     )
     max_rating = forms.FloatField(
         required=False,
-        label="Max. Rating",
+        label="Max. community rating",
         widget=forms.NumberInput(attrs={"placeholder": "5.0", "class": "form-control"}),
     )
     min_players = forms.IntegerField(
@@ -55,8 +55,8 @@ class GameSearchForm(forms.Form):
     SORT_CHOICES = [
         ("title", "Title (A-Z)"),
         ("-title", "Title (Z-A)"),
-        ("rating", "Rating (Asc.)"),
-        ("-rating", "Rating (Desc.)"),
+        ("review_avg", "Community rating (Asc.)"),
+        ("-review_avg", "Community rating (Desc.)"),
         ("release_date", "Release Date (Oldest First)"),
         ("-release_date", "Release Date (Newest First)"),
         ("min_players", "Min. Players (Asc.)"),
@@ -80,7 +80,6 @@ class GameForm(forms.ModelForm):
             "title",
             "genre",
             "release_date",
-            "rating",
             "min_players",
             "max_players",
             "description",
@@ -92,9 +91,6 @@ class GameForm(forms.ModelForm):
             ),
             "title": forms.TextInput(
                 attrs={"placeholder": "What's the name of the game?"}
-            ),
-            "rating": forms.NumberInput(
-                attrs={"placeholder": "Whats the rating? (0/5)"}
             ),
             "min_players": forms.NumberInput(attrs={"placeholder": "Min. Players"}),
             "max_players": forms.NumberInput(attrs={"placeholder": "Max. Players"}),
@@ -108,7 +104,6 @@ class GameForm(forms.ModelForm):
         cleaned_data = super().clean()
         min_players = cleaned_data.get("min_players")
         max_players = cleaned_data.get("max_players")
-        rating = cleaned_data.get("rating")
         release_date = cleaned_data.get("release_date")
 
         if min_players is not None and max_players is not None:
@@ -121,10 +116,6 @@ class GameForm(forms.ModelForm):
                     "max_players",
                     "Maximum players can't be less than minimum players.",
                 )
-
-        if rating is not None:
-            if rating < 0 or rating > 5:
-                self.add_error("rating", "Rating is only from 0 to 5")
 
         if release_date is not None:
             if release_date > datetime.date.today():

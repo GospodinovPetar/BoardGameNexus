@@ -31,16 +31,16 @@
                         </li>
                         <li class="list-group-item text-start d-flex flex-column">
                             <div>
-                                <i class="bi bi-star-fill"></i> <strong>Rating:</strong>
+                                <i class="bi bi-star-fill"></i> <strong>Community rating:</strong>
                                 <span class="ms-2 d-inline-block" style="font-size: 1.2rem;">
                                     {% for i in "12345" %}
-                                        {% if forloop.counter <= game.rating %}
+                                        {% if forloop.counter <= game.review_avg %}
                                             <i class="bi bi-star-fill text-warning"></i>
                                         {% else %}
                                             <i class="bi bi-star text-secondary"></i>
                                         {% endif %}
                                     {% endfor %}
-                                ({{ game.rating|floatformat:1 }} / 5.0)
+                                <span class="text-muted small">({{ game.review_avg|floatformat:1 }} / 5.0 from reviews)</span>
                                 </span>
                             </div>
                         </li>
@@ -55,7 +55,47 @@
                     <p class="game-description-text text-start">
                         {{ game.description|default:"No description available for this game." }}
                     </p>
-                    
+
+                    <hr class="my-4">
+
+                    <h5 class="game-description-heading text-start mb-3">
+                        <i class="bi bi-chat-square-text me-2"></i>Reviews
+                    </h5>
+                    {% if game.reviews.all %}
+                        <ul class="list-group list-group-flush mb-3">
+                            {% for rev in game.reviews.all %}
+                                <li class="list-group-item bg-transparent px-0 border-secondary">
+                                    <div class="d-flex gap-2 align-items-start">
+                                        {% include "reviews/_review_author_avatar.html" with user_obj=rev.author size=36 %}
+                                        <div class="flex-grow-1 min-w-0">
+                                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                                                <a href="{% url 'reviews:review_detail' rev.pk %}" class="fw-semibold text-decoration-none">{{ rev.title }}</a>
+                                                <span class="badge bg-warning text-dark">{{ rev.rating }} / 5</span>
+                                            </div>
+                                            <p class="small text-muted mb-1">{{ rev.author.username }}</p>
+                                            <p class="mb-0 small">{{ rev.content|truncatewords:24 }}</p>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted small mb-3">No reviews for this game yet.</p>
+                    {% endif %}
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'reviews:create_review' game.pk %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-pencil-square me-1"></i>Write a Review
+                            </a>
+                        {% else %}
+                            <a href="{% url 'accounts:login' %}?next={% url 'reviews:create_review' game.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-box-arrow-in-right me-1"></i>Log in to write a review
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'reviews:reviews_list' %}?game={{ game.pk }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-list-ul me-1"></i>All reviews for this game
+                        </a>
+                    </div>
 
                 </div>
             </div>

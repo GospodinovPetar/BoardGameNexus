@@ -1,13 +1,26 @@
+from django.db.models import Avg, FloatField, Prefetch, Value
+from django.db.models.functions import Coalesce
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from games.models import BoardGame
+from reviews.models import GameReview
 from .forms import GameSearchForm, GameForm
 
 
+def _games_with_review_avg(queryset):
+    return queryset.annotate(
+        review_avg=Coalesce(
+            Avg("reviews__rating"),
+            Value(0.0),
+            output_field=FloatField(),
+        ),
+    )
+
+
 def get_all_games(request):
-    games_list = BoardGame.objects.all()
+    games_list = _games_with_review_avg(BoardGame.objects.all())
     form = GameSearchForm(request.GET)
 
     if form.is_valid():
@@ -26,9 +39,9 @@ def get_all_games(request):
         if genres:
             games_list = games_list.filter(genre__in=genres)
         if min_rating is not None:
-            games_list = games_list.filter(rating__gte=min_rating)
+            games_list = games_list.filter(review_avg__gte=min_rating)
         if max_rating is not None:
-            games_list = games_list.filter(rating__lte=max_rating)
+            games_list = games_list.filter(review_avg__lte=max_rating)
         if min_players is not None:
             games_list = games_list.filter(min_players__gte=min_players)
         if max_players is not None:
@@ -39,7 +52,11 @@ def get_all_games(request):
             games_list = games_list.filter(release_date__gte=release_date_after)
 
         if sort_by:
-            games_list = games_list.order_by(sort_by)
+            sort_map = {
+                "rating": "review_avg",
+                "-rating": "-review_avg",
+            }
+            games_list = games_list.order_by(sort_map.get(sort_by, sort_by))
 
     paginator = Paginator(games_list, 6)
     page = request.GET.get("page")
@@ -60,7 +77,17 @@ def get_all_games(request):
 
 
 def get_game_details(request, pk):
-    game = get_object_or_404(BoardGame, pk=pk)
+    game = get_object_or_404(
+        _games_with_review_avg(BoardGame.objects.all()).prefetch_related(
+            Prefetch(
+                "reviews",
+                queryset=GameReview.objects.select_related("author").order_by(
+                    "-created_at"
+                ),
+            )
+        ),
+        pk=pk,
+    )
 
     context = {"game": game}
 

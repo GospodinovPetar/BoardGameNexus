@@ -31,13 +31,6 @@ class BoardGame(models.Model):
         null=True,
         blank=True,
     )
-    rating = models.FloatField(
-        default=0.0,
-        validators=[
-            MinValueValidator(0.0),
-            MaxValueValidator(5.0),
-        ],
-    )
     min_players = models.IntegerField(
         validators=[
             MinValueValidator(1),

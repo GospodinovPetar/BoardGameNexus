@@ -44,11 +44,16 @@
             <ul class="list-group list-group-flush">
                 {% for review in reviews %}
                     <li class="list-group-item bg-transparent">
-                        {% if review.get_absolute_url %}
-                            <a href="{{ review.get_absolute_url }}">{{ review }}</a>
-                        {% else %}
-                            {{ review }}
-                        {% endif %}
+                        <div class="d-flex gap-3 align-items-start">
+                            {% include "reviews/_review_author_avatar.html" with user_obj=review.author size=40 %}
+                            <div class="flex-grow-1 min-w-0">
+                                <a href="{{ review.get_absolute_url }}" class="fw-semibold text-decoration-none">{{ review.title }}</a>
+                                <span class="badge bg-warning text-dark ms-1">{{ review.rating }}/5</span>
+                                <p class="small text-muted mb-0">
+                                    <a href="{% url 'games:game_details' review.game.pk %}">{{ review.game.title }}</a>
+                                </p>
+                            </div>
+                        </div>
                     </li>
                 {% empty %}
                     <li class="list-group-item bg-transparent text-muted">No reviews yet.</li>
@@ -61,11 +66,8 @@
             <ul class="list-group list-group-flush">
                 {% for collection in collections %}
                     <li class="list-group-item bg-transparent">
-                        {% if collection.get_absolute_url %}
-                            <a href="{{ collection.get_absolute_url }}">{{ collection }}</a>
-                        {% else %}
-                            {{ collection }}
-                        {% endif %}
+                        <a href="{% url 'games:game_details' collection.game.pk %}" class="text-decoration-none">{{ collection.game.title }}</a>
+                        <span class="text-muted small ms-2">({{ collection.get_status_display }})</span>
                     </li>
                 {% empty %}
                     <li class="list-group-item bg-transparent text-muted">No collections yet.</li>

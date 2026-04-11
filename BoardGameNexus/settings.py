@@ -21,6 +21,7 @@ PROJECT_APPS = [
     "accounts",
     "events",
     "games",
+    "reviews",
     "web",
 ]
 

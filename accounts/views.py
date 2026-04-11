@@ -1,12 +1,12 @@
-from django.apps import apps
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
-from django.core.exceptions import FieldError
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, TemplateView
+
+from reviews.models import GameReview, UserCollection
 
 from .forms import EditProfileForm, EditUserProfileForm, LoginForm, RegisterForm
 from .models import CustomUser
@@ -53,46 +53,18 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         return context
 
     def _reviews_for_user(self, user):
-        if not apps.is_installed("reviews"):
-            return []
-        Review = apps.get_model("reviews", "Review")
-        queryset = None
-        for fk in ("author", "user", "reviewer"):
-            try:
-                queryset = Review.objects.filter(**{fk: user})
-                break
-            except FieldError:
-                continue
-        if queryset is None:
-            return []
-        field_names = {f.name for f in Review._meta.get_fields()}
-        prefetch = [
-            name for name in ("comments", "replies", "tags") if name in field_names
-        ]
-        if prefetch:
-            queryset = queryset.prefetch_related(*prefetch)
-        for name in ("game", "boardgame", "board_game"):
-            if name in field_names:
-                try:
-                    queryset = queryset.select_related(name)
-                except (FieldError, ValueError):
-                    continue
-                break
-        return queryset
+        return (
+            GameReview.objects.filter(author=user)
+            .select_related("game")
+            .order_by("-created_at")
+        )
 
     def _collections_for_user(self, user):
-        if not apps.is_installed("games"):
-            return []
-        try:
-            Collection = apps.get_model("games", "Collection")
-        except LookupError:
-            return []
-        for fk in ("owner", "user"):
-            try:
-                return Collection.objects.filter(**{fk: user})
-            except FieldError:
-                continue
-        return []
+        return (
+            UserCollection.objects.filter(user=user)
+            .select_related("game")
+            .order_by("-added_at")
+        )
 
 
 class EditProfileView(LoginRequiredMixin, View):
