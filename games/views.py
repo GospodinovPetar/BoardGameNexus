@@ -1,12 +1,12 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Avg, FloatField, Prefetch, Value
 from django.db.models.functions import Coalesce
-from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.urls import reverse, reverse_lazy
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from games.models import BoardGame
 from reviews.models import GameReview
-from .forms import GameSearchForm, GameForm
+from .forms import GameForm, GameSearchForm
 
 
 def _games_with_review_avg(queryset):
@@ -19,144 +19,156 @@ def _games_with_review_avg(queryset):
     )
 
 
-def get_all_games(request):
-    games_list = _games_with_review_avg(BoardGame.objects.all())
-    form = GameSearchForm(request.GET)
+class GameListView(ListView):
+    model = BoardGame
+    template_name = "games.html"
+    context_object_name = "games"
+    paginate_by = 6
 
-    if form.is_valid():
-        title = form.cleaned_data.get("title")
-        genres = form.cleaned_data.get("genre")
-        min_rating = form.cleaned_data.get("min_rating")
-        max_rating = form.cleaned_data.get("max_rating")
-        min_players = form.cleaned_data.get("min_players")
-        max_players = form.cleaned_data.get("max_players")
-        release_date_before = form.cleaned_data.get("release_date_before")
-        release_date_after = form.cleaned_data.get("release_date_after")
-        sort_by = form.cleaned_data.get("sort_by")
+    def get_queryset(self):
+        games_list = _games_with_review_avg(BoardGame.objects.all())
+        form = GameSearchForm(self.request.GET)
 
-        if title:
-            games_list = games_list.filter(title__icontains=title)
-        if genres:
-            games_list = games_list.filter(genre__in=genres)
-        if min_rating is not None:
-            games_list = games_list.filter(review_avg__gte=min_rating)
-        if max_rating is not None:
-            games_list = games_list.filter(review_avg__lte=max_rating)
-        if min_players is not None:
-            games_list = games_list.filter(min_players__gte=min_players)
-        if max_players is not None:
-            games_list = games_list.filter(max_players__lte=max_players)
-        if release_date_before:
-            games_list = games_list.filter(release_date__lte=release_date_before)
-        if release_date_after:
-            games_list = games_list.filter(release_date__gte=release_date_after)
+        if form.is_valid():
+            title = form.cleaned_data.get("title")
+            genres = form.cleaned_data.get("genre")
+            min_rating = form.cleaned_data.get("min_rating")
+            max_rating = form.cleaned_data.get("max_rating")
+            min_players = form.cleaned_data.get("min_players")
+            max_players = form.cleaned_data.get("max_players")
+            release_date_before = form.cleaned_data.get("release_date_before")
+            release_date_after = form.cleaned_data.get("release_date_after")
+            sort_by = form.cleaned_data.get("sort_by")
 
-        if sort_by:
-            sort_map = {
-                "rating": "review_avg",
-                "-rating": "-review_avg",
-            }
-            games_list = games_list.order_by(sort_map.get(sort_by, sort_by))
+            if title:
+                games_list = games_list.filter(title__icontains=title)
+            if genres:
+                games_list = games_list.filter(genre__in=genres)
+            if min_rating is not None:
+                games_list = games_list.filter(review_avg__gte=min_rating)
+            if max_rating is not None:
+                games_list = games_list.filter(review_avg__lte=max_rating)
+            if min_players is not None:
+                games_list = games_list.filter(min_players__gte=min_players)
+            if max_players is not None:
+                games_list = games_list.filter(max_players__lte=max_players)
+            if release_date_before:
+                games_list = games_list.filter(
+                    release_date__lte=release_date_before
+                )
+            if release_date_after:
+                games_list = games_list.filter(
+                    release_date__gte=release_date_after
+                )
 
-    paginator = Paginator(games_list, 6)
-    page = request.GET.get("page")
+            if sort_by:
+                sort_map = {
+                    "rating": "review_avg",
+                    "-rating": "-review_avg",
+                }
+                games_list = games_list.order_by(sort_map.get(sort_by, sort_by))
 
-    try:
-        games = paginator.page(page)
-    except PageNotAnInteger:
-        games = paginator.page(1)
-    except EmptyPage:
-        games = paginator.page(paginator.num_pages)
+        return games_list
 
-    context = {
-        "games": games,
-        "form": form,
-    }
-
-    return render(request, "games.html", context)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        page_obj = context["page_obj"]
+        context["games"] = page_obj
+        form = GameSearchForm(self.request.GET)
+        context["form"] = form
+        return context
 
 
-def get_game_details(request, pk):
-    game = get_object_or_404(
-        _games_with_review_avg(BoardGame.objects.all()).prefetch_related(
+class GameDetailView(DetailView):
+    model = BoardGame
+    template_name = "game_detail.html"
+    context_object_name = "game"
+
+    def get_queryset(self):
+        queryset = _games_with_review_avg(BoardGame.objects.all())
+        queryset = queryset.prefetch_related(
             Prefetch(
                 "reviews",
                 queryset=GameReview.objects.select_related("author").order_by(
                     "-created_at"
                 ),
             )
-        ),
-        pk=pk,
-    )
+        )
+        return queryset
 
-    context = {"game": game}
-
-    return render(request, "game_detail.html", context)
-
-
-def add_game(request):
-    if request.method == "POST":
-        form = GameForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect("games:games")
-    else:
-        form = GameForm()
-
-    context = {
-        "form": form,
-        "page_title": "Add a new game",
-        "button_text": "Add",
-        "cancel_url": reverse("games:games"),
-        "form_action_url": reverse("games:add_game"),
-    }
-
-    return render(request, "game_cud.html", context)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        game = context["game"]
+        reviews = game.reviews.all()
+        context["reviews"] = reviews
+        return context
 
 
-def edit_game(request, pk):
-    game = get_object_or_404(BoardGame, pk=pk)
-    if request.method == "POST":
-        form = GameForm(request.POST, instance=game)
-        if form.is_valid():
-            form.save()
-            return redirect("games:game_details", pk=pk)
-    else:
-        form = GameForm(instance=game)
+class GameCreateView(LoginRequiredMixin, CreateView):
+    model = BoardGame
+    form_class = GameForm
+    template_name = "game_cud.html"
+    success_url = reverse_lazy("games:games")
 
-    context = {
-        "form": form,
-        "game": game,
-        "edit": True,
-        "page_title": f"Editing {game.title}",
-        "button_text": "Edit",
-        "cancel_url": reverse("games:game_details", kwargs={"pk": pk}),
-        "form_action_url": reverse("games:edit_game", kwargs={"pk": pk}),
-    }
-
-    return render(request, "game_cud.html", context)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["page_title"] = "Add a new game"
+        context["button_text"] = "Add"
+        context["cancel_url"] = reverse("games:games")
+        context["form_action_url"] = reverse("games:add_game")
+        return context
 
 
-def delete_game(request, pk):
-    game = get_object_or_404(BoardGame, pk=pk)
+class GameUpdateView(LoginRequiredMixin, UpdateView):
+    model = BoardGame
+    form_class = GameForm
+    template_name = "game_cud.html"
+    context_object_name = "game"
 
-    if request.method == "POST":
-        game.delete()
-        return redirect("games:games")
-    else:
-        form = GameForm(instance=game)
+    def get_success_url(self):
+        url = reverse("games:game_details", kwargs={"pk": self.object.pk})
+        return url
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["edit"] = True
+        context["page_title"] = f"Editing {self.object.title}"
+        context["button_text"] = "Edit"
+        context["cancel_url"] = reverse(
+            "games:game_details",
+            kwargs={"pk": self.object.pk},
+        )
+        context["form_action_url"] = reverse(
+            "games:edit_game",
+            kwargs={"pk": self.object.pk},
+        )
+        return context
+
+
+class GameDeleteView(LoginRequiredMixin, DeleteView):
+    model = BoardGame
+    template_name = "game_cud.html"
+    success_url = reverse_lazy("games:games")
+    context_object_name = "game"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        form = GameForm(instance=self.object)
         for field in form.fields.values():
             field.widget.attrs["disabled"] = "disabled"
-
-    context = {
-        "form": form,
-        "game": game,
-        "delete": True,
-        "form_action_url": reverse("games:delete_game", kwargs={"pk": pk}),
-        "button_text": "Delete",
-        "page_title": f"Delete {game.title}",
-        "cancel_url": reverse("games:game_details", kwargs={"pk": pk}),
-        "confirm_message": f'Are you sure you want to delete "{game.title}"? This action cannot be undone!',
-    }
-
-    return render(request, "game_cud.html", context)
+        context["form"] = form
+        context["delete"] = True
+        context["form_action_url"] = reverse(
+            "games:delete_game",
+            kwargs={"pk": self.object.pk},
+        )
+        context["button_text"] = "Delete"
+        context["page_title"] = f"Delete {self.object.title}"
+        context["cancel_url"] = reverse(
+            "games:game_details",
+            kwargs={"pk": self.object.pk},
+        )
+        context["confirm_message"] = (
+            f'Are you sure you want to delete "{self.object.title}"? This action cannot be undone!'
+        )
+        return context

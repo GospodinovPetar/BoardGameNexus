@@ -1,29 +1,32 @@
-from django.shortcuts import render
+from django.views.generic import TemplateView
+
 from events.models import Event
 from games.models import BoardGame
 
-# Create your views here.
+
+class IndexView(TemplateView):
+    template_name = "home.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        event_count = Event.objects.count()
+        game_count = BoardGame.objects.count()
+        context["event_count"] = event_count
+        context["game_count"] = game_count
+        return context
 
 
-def index(request):
-    event_count = Event.objects.count()
-    game_count = BoardGame.objects.count()
-    context = {
-        "event_count": event_count,
-        "game_count": game_count,
-    }
-    return render(request, "home.html", context)
+class MissionView(TemplateView):
+    template_name = "mission.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        event_count = Event.objects.count()
+        game_count = BoardGame.objects.count()
+        context["event_count"] = event_count
+        context["game_count"] = game_count
+        return context
 
 
-def mission(request):
-    event_count = Event.objects.count()
-    game_count = BoardGame.objects.count()
-    context = {
-        "event_count": event_count,
-        "game_count": game_count,
-    }
-    return render(request, "mission.html", context)
-
-
-def contact_view(request):
-    return render(request, "contact.html")
+class ContactView(TemplateView):
+    template_name = "contact.html"

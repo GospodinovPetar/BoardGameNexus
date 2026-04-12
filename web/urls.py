@@ -4,7 +4,7 @@ from web import views
 
 app_name = "web"
 urlpatterns = [
-    path("", views.index, name="index"),
-    path("mission/", views.mission, name="mission"),
-    path("contact/", views.contact_view, name="contact"),
+    path("", views.IndexView.as_view(), name="index"),
+    path("mission/", views.MissionView.as_view(), name="mission"),
+    path("contact/", views.ContactView.as_view(), name="contact"),
 ]
