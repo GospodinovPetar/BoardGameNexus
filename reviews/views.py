@@ -49,6 +49,7 @@ class ReviewDetailView(DetailView):
         review = self.object
         context["can_edit_review"] = user.is_authenticated and (
             user == review.author
+            or user.is_superuser
             or user.groups.filter(name="Moderators").exists()
         )
         return context
@@ -92,9 +93,11 @@ class ReviewUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def test_func(self):
         obj = self.get_object()
-        return self.request.user == obj.author or self.request.user.groups.filter(
-            name="Moderators"
-        ).exists()
+        return (
+            self.request.user == obj.author
+            or self.request.user.is_superuser
+            or self.request.user.groups.filter(name="Moderators").exists()
+        )
 
     def get_success_url(self):
         return reverse("games:game_details", kwargs={"pk": self.object.game.pk})
@@ -114,9 +117,11 @@ class ReviewDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         obj = self.get_object()
-        return self.request.user == obj.author or self.request.user.groups.filter(
-            name="Moderators"
-        ).exists()
+        return (
+            self.request.user == obj.author
+            or self.request.user.is_superuser
+            or self.request.user.groups.filter(name="Moderators").exists()
+        )
 
     def get_success_url(self):
         return reverse("games:game_details", kwargs={"pk": self.object.game.pk})

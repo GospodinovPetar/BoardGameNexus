@@ -86,9 +86,11 @@
                     <button class="btn btn-outline-info filter-btn" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse" title="More filters">
                         <i class="bi bi-funnel-fill"></i>
                     </button>
+                    {% if perms.games.add_boardgame %}
                     <a class="btn btn-outline-success add-game-button" href="{% url 'games:add_game' %}" title="Add new game">
                         <i class="bi bi-plus-circle"></i> <span class="d-none d-md-inline">Add Game</span>
                     </a>
+                    {% endif %}
                 </div>
 
                 <div class="collapse filter-options-collapsed" id="filterCollapse">
@@ -137,9 +139,11 @@
             </a>
         {% else %}
             <p class="lead text-white-50">No games have been added to BoardGame Nexus yet.</p>
+            {% if perms.games.add_boardgame %}
             <a class="btn btn-success btn-lg mt-3" href="{% url 'games:add_game' %}">
                 <i class="bi bi-controller me-2"></i> Add the first game!
             </a>
+            {% endif %}
         {% endif %}
     </div>
     {% else %}

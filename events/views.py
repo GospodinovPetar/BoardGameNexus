@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views import View
@@ -123,11 +123,16 @@ class EventCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class EventUpdateView(LoginRequiredMixin, UpdateView):
+class EventUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Event
     form_class = EventForm
     template_name = "event_cud.html"
     context_object_name = "event"
+
+    def test_func(self):
+        return self.request.user.is_superuser or self.request.user.groups.filter(
+            name="Moderators"
+        ).exists()
 
     def get_success_url(self):
         url = reverse("events:event_detail", kwargs={"pk": self.object.pk})
@@ -157,11 +162,16 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
 
-class EventDeleteView(LoginRequiredMixin, DeleteView):
+class EventDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Event
     template_name = "event_cud.html"
     success_url = reverse_lazy("events:events_list")
     context_object_name = "event"
+
+    def test_func(self):
+        return self.request.user.is_superuser or self.request.user.groups.filter(
+            name="Moderators"
+        ).exists()
 
     def delete(self, request, *args, **kwargs):
         event = self.get_object()

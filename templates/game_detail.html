@@ -107,21 +107,27 @@
                         <i class="bi bi-arrow-left me-2"></i> Back to Games
                     </a>
                 </div>
+                {% if user.is_authenticated %}
                 <div class="col">
                     <a href="{% url 'events:add_event' %}?game_id={{ game.pk }}" class="btn btn-primary btn-action-uniform w-100">
                         <i class="bi bi-calendar-plus me-2"></i> Create Event
                     </a>
                 </div>
+                {% endif %}
+                {% if perms.games.change_boardgame %}
                 <div class="col">
                     <a href="{% url 'games:edit_game' game.pk %}" class="btn btn-action-primary btn-action-uniform w-100">
                         <i class="bi bi-pencil me-2"></i> Edit Game
                     </a>
                 </div>
+                {% endif %}
+                {% if perms.games.delete_boardgame %}
                 <div class="col">
                     <a href="{% url 'games:delete_game' game.pk %}" class="btn btn-danger btn-action-uniform w-100">
                         <i class="bi bi-trash me-2"></i> Delete
                     </a>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -1,4 +1,4 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Avg, FloatField, Prefetch, Value
 from django.db.models.functions import Coalesce
 from django.urls import reverse, reverse_lazy
@@ -104,11 +104,16 @@ class GameDetailView(DetailView):
         return context
 
 
-class GameCreateView(LoginRequiredMixin, CreateView):
+class GameCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = BoardGame
     form_class = GameForm
     template_name = "game_cud.html"
     success_url = reverse_lazy("games:games")
+
+    def test_func(self):
+        return self.request.user.is_superuser or self.request.user.groups.filter(
+            name="Moderators"
+        ).exists()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -119,11 +124,16 @@ class GameCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class GameUpdateView(LoginRequiredMixin, UpdateView):
+class GameUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = BoardGame
     form_class = GameForm
     template_name = "game_cud.html"
     context_object_name = "game"
+
+    def test_func(self):
+        return self.request.user.is_superuser or self.request.user.groups.filter(
+            name="Moderators"
+        ).exists()
 
     def get_success_url(self):
         url = reverse("games:game_details", kwargs={"pk": self.object.pk})
@@ -145,11 +155,16 @@ class GameUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
 
-class GameDeleteView(LoginRequiredMixin, DeleteView):
+class GameDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = BoardGame
     template_name = "game_cud.html"
     success_url = reverse_lazy("games:games")
     context_object_name = "game"
+
+    def test_func(self):
+        return self.request.user.is_superuser or self.request.user.groups.filter(
+            name="Moderators"
+        ).exists()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

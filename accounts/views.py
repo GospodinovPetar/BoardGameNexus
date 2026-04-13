@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import Group
 from django.contrib.auth.views import LoginView, LogoutView
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
@@ -25,6 +26,8 @@ class RegisterView(CreateView):
 
     def form_valid(self, form):
         response = super().form_valid(form)
+        members_group = Group.objects.get(name="Members")
+        self.object.groups.add(members_group)
         messages.success(self.request, "Account created! Please log in.")
         return response
 

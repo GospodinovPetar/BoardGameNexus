@@ -18,9 +18,11 @@
                     <button class="btn btn-outline-info filter-btn" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse" title="More filters">
                         <i class="bi bi-funnel-fill"></i>
                     </button>
+                    {% if user.is_authenticated %}
                     <a class="btn btn-outline-success add-game-button" href="{% url 'events:add_event' %}" title="Add new event">
                         <i class="bi bi-plus-circle"></i> <span class="d-none d-md-inline">Create Event</span>
                     </a>
+                    {% endif %}
                 </div>
 
                 <div class="collapse filter-options-collapsed" id="filterCollapse">
@@ -108,9 +110,11 @@
             </a>
         {% else %}
             <p class="lead text-white-50 mb-3">No active events yet. Be the first!</p>
+            {% if user.is_authenticated %}
             <a class="btn btn-create-event btn-lg" href="{% url 'events:add_event' %}">
                 <i class="bi bi-calendar-plus me-2"></i> Create the First Event
             </a>
+            {% endif %}
         {% endif %}
     </div>
     {% endif %}

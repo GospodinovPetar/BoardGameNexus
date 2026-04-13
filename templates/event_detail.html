@@ -67,16 +67,20 @@
                             <i class="bi bi-box-arrow-in-right me-2"></i> Join
                         </a>
                     </div>
+                    {% if perms.events.change_event %}
                     <div class="col">
                         <a href="{% url 'events:edit_event' event.pk %}" class="btn btn-action-primary btn-action-uniform w-100">
                             <i class="bi bi-pencil me-2"></i> Edit
                         </a>
                     </div>
+                    {% endif %}
+                    {% if perms.events.delete_event %}
                     <div class="col">
                         <a href="{% url 'events:delete_event' event.pk %}" class="btn btn-danger btn-action-uniform w-100">
                             <i class="bi bi-trash me-2"></i> Delete
                         </a>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
