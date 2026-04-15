@@ -22,8 +22,12 @@ class RegisterForm(UserCreationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for name in self.fields:
-            self.fields[name].widget.attrs.setdefault("class", "form-control")
+        self.fields["username"].widget.attrs["class"] = "form-control"
+        self.fields["email"].widget.attrs["class"] = "form-control"
+        self.fields["first_name"].widget.attrs["class"] = "form-control"
+        self.fields["last_name"].widget.attrs["class"] = "form-control"
+        self.fields["password1"].widget.attrs["class"] = "form-control"
+        self.fields["password2"].widget.attrs["class"] = "form-control"
         self.helper = FormHelper()
         self.helper.form_tag = False
 
@@ -64,9 +68,9 @@ class EditProfileForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["first_name"].widget.attrs.setdefault("class", "form-control")
-        self.fields["last_name"].widget.attrs.setdefault("class", "form-control")
-        self.fields["email"].widget.attrs.setdefault("class", "form-control")
+        self.fields["first_name"].widget.attrs["class"] = "form-control"
+        self.fields["last_name"].widget.attrs["class"] = "form-control"
+        self.fields["email"].widget.attrs["class"] = "form-control"
 
     def clean_email(self):
         email = self.cleaned_data["email"]

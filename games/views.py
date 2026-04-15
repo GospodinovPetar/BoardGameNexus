@@ -1,22 +1,17 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.db.models import Avg, FloatField, Prefetch, Value
+from django.db.models import Avg, FloatField, Value
 from django.db.models.functions import Coalesce
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    DetailView,
+    ListView,
+    UpdateView,
+)
 
 from games.models import BoardGame
-from reviews.models import GameReview
 from .forms import GameForm, GameSearchForm
-
-
-def _games_with_review_avg(queryset):
-    return queryset.annotate(
-        review_avg=Coalesce(
-            Avg("reviews__rating"),
-            Value(0.0),
-            output_field=FloatField(),
-        ),
-    )
 
 
 class GameListView(ListView):
@@ -26,7 +21,13 @@ class GameListView(ListView):
     paginate_by = 6
 
     def get_queryset(self):
-        games_list = _games_with_review_avg(BoardGame.objects.all())
+        games_list = BoardGame.objects.annotate(
+            review_avg=Coalesce(
+                Avg("reviews__rating"),
+                Value(0.0),
+                output_field=FloatField(),
+            )
+        )
         form = GameSearchForm(self.request.GET)
 
         if form.is_valid():
@@ -53,20 +54,16 @@ class GameListView(ListView):
             if max_players is not None:
                 games_list = games_list.filter(max_players__lte=max_players)
             if release_date_before:
-                games_list = games_list.filter(
-                    release_date__lte=release_date_before
-                )
+                games_list = games_list.filter(release_date__lte=release_date_before)
             if release_date_after:
-                games_list = games_list.filter(
-                    release_date__gte=release_date_after
-                )
+                games_list = games_list.filter(release_date__gte=release_date_after)
 
-            if sort_by:
-                sort_map = {
-                    "rating": "review_avg",
-                    "-rating": "-review_avg",
-                }
-                games_list = games_list.order_by(sort_map.get(sort_by, sort_by))
+            if sort_by == "rating":
+                games_list = games_list.order_by("review_avg")
+            elif sort_by == "-rating":
+                games_list = games_list.order_by("-review_avg")
+            elif sort_by:
+                games_list = games_list.order_by(sort_by)
 
         return games_list
 
@@ -85,15 +82,14 @@ class GameDetailView(DetailView):
     context_object_name = "game"
 
     def get_queryset(self):
-        queryset = _games_with_review_avg(BoardGame.objects.all())
-        queryset = queryset.prefetch_related(
-            Prefetch(
-                "reviews",
-                queryset=GameReview.objects.select_related("author").order_by(
-                    "-created_at"
-                ),
+        queryset = BoardGame.objects.annotate(
+            review_avg=Coalesce(
+                Avg("reviews__rating"),
+                Value(0.0),
+                output_field=FloatField(),
             )
         )
+        queryset = queryset.prefetch_related("reviews__author")
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -111,9 +107,10 @@ class GameCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     success_url = reverse_lazy("games:games")
 
     def test_func(self):
-        return self.request.user.is_superuser or self.request.user.groups.filter(
-            name="Moderators"
-        ).exists()
+        return (
+            self.request.user.is_superuser
+            or self.request.user.groups.filter(name="Moderators").exists()
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -131,9 +128,10 @@ class GameUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     context_object_name = "game"
 
     def test_func(self):
-        return self.request.user.is_superuser or self.request.user.groups.filter(
-            name="Moderators"
-        ).exists()
+        return (
+            self.request.user.is_superuser
+            or self.request.user.groups.filter(name="Moderators").exists()
+        )
 
     def get_success_url(self):
         url = reverse("games:game_details", kwargs={"pk": self.object.pk})
@@ -162,9 +160,10 @@ class GameDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     context_object_name = "game"
 
     def test_func(self):
-        return self.request.user.is_superuser or self.request.user.groups.filter(
-            name="Moderators"
-        ).exists()
+        return (
+            self.request.user.is_superuser
+            or self.request.user.groups.filter(name="Moderators").exists()
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

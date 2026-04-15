@@ -3,7 +3,13 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views import View
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    DetailView,
+    ListView,
+    UpdateView,
+)
 
 from events.forms import EventForm, EventSearchForm
 from events.models import Event
@@ -40,9 +46,7 @@ class EventListView(ListView):
             if locations:
                 events_list = events_list.filter(location__in=locations)
             if min_players is not None:
-                events_list = events_list.filter(
-                    current_players__gte=min_players
-                )
+                events_list = events_list.filter(current_players__gte=min_players)
             if max_players is not None:
                 events_list = events_list.filter(max_players__lte=max_players)
             if date_time_before:
@@ -130,9 +134,10 @@ class EventUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     context_object_name = "event"
 
     def test_func(self):
-        return self.request.user.is_superuser or self.request.user.groups.filter(
-            name="Moderators"
-        ).exists()
+        return (
+            self.request.user.is_superuser
+            or self.request.user.groups.filter(name="Moderators").exists()
+        )
 
     def get_success_url(self):
         url = reverse("events:event_detail", kwargs={"pk": self.object.pk})
@@ -169,9 +174,10 @@ class EventDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     context_object_name = "event"
 
     def test_func(self):
-        return self.request.user.is_superuser or self.request.user.groups.filter(
-            name="Moderators"
-        ).exists()
+        return (
+            self.request.user.is_superuser
+            or self.request.user.groups.filter(name="Moderators").exists()
+        )
 
     def delete(self, request, *args, **kwargs):
         event = self.get_object()

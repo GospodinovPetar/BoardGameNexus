@@ -1,122 +1,151 @@
 # BoardGame Nexus
 
-A web app for board game fans - browse games, create events, and keep track of who's joining. Built with Django as my exam project for the SoftUni Django Basics course.
+A Django web app for board game fans: browse a game catalog, create/join events, write reviews, and manage your personal collection. Includes a REST API with Swagger docs.
 
----
+## Features
 
-## What it does
+- **Games**: genre-based catalog of board games
+- **Events**: create events, link them to games, and join events (with capacity limits)
+- **Accounts**: custom user model + profile (bio/avatar/date of birth)
+- **Reviews**: one review per user per game (1–5 rating)
+- **Collections**: track games as “Want to Play / Currently Playing / Played / Owned”
+- **API**: DRF endpoints for games, events, reviews, collections, and current user
+- **API docs**: OpenAPI schema + Swagger UI
 
-The app has three main sections:
+## Tech stack
 
-**Games** - a catalog where you can add board games with ratings, player counts, genre, and a cover image. The list has search and filtering (by genre, rating range, player count, release date) and sorting.
+- **Backend**: Django 6.0.2, Django REST Framework
+- **DB**: PostgreSQL
+- **UI**: Bootstrap 5, `django-crispy-forms` + `crispy-bootstrap5`
+- **Admin**: `django-jazzmin`
+- **API schema**: `drf-spectacular`
+- **Config**: `python-dotenv` (loads `.env`)
 
-**Events** - create gaming events, set a date/time and location, link them to games from the catalog, and track how many players have joined. Events can be filtered and sorted as well.
+## Quickstart
 
-**Static pages** - The Contact page. The home and mission pages show live counts of games and events in the database.
+### Local development
 
-A small extra I liked: when you open "Create Event" from a game's detail page, that game gets pre-selected in the event form automatically.
-
----
-
-## Tech
-
-- Django 6.0.2
-- PostgreSQL
-- Bootstrap 5 (dark theme)
-- django-crispy-forms + crispy-bootstrap5
-- django-jazzmin (admin panel)
-- python-dotenv
-
----
-
-## Setup
-
-**Requirements:** Python 3.10+, PostgreSQL
+**Requirements**: Python 3.10+ (tested with 3.12), PostgreSQL
 
 ```bash
-git clone https://github.com/your-username/BoardGameNexus.git
-cd BoardGameNexus
 cp .env.example .env
 
 python -m venv .venv
 source .venv/bin/activate      # Windows: .venv\Scripts\activate
 
 pip install -r requirements.txt
-```
-
-Populate your .env file accordingly.
-
-```bash
 python manage.py migrate
 python manage.py loaddata initial_data.json
-python manage.py createsuperuser   # for admin access
+python manage.py createsuperuser
 python manage.py runserver
-```
-```bash 
-CRITICAL -> DO NOT DELETE THE FIXTURES FILES IF YOU WANT POPULATED GENRES (OTHERWISE ADD THEM MANUALLY FROM ADMIN PANEL)
 ```
 
 App runs at `http://127.0.0.1:8000/`
 
----
+### Docker (Postgres + Django)
 
-## Pages
+```bash
+cp .env.example .env
+docker compose up --build
+```
 
-| URL | Page |
+`docker-compose.yml` starts Postgres + Django. The `web` service runs migrations and loads `initial_data.json` on startup, then serves Django on port 8000.
+
+## Environment variables
+
+The project reads config from `.env` (loaded via `python-dotenv`). Required variables:
+
+- **`SECRET_KEY`**
+- **`DB_NAME`**
+- **`DB_USER`**
+- **`DB_PASSWORD`**
+- **`DB_HOST`** (local dev usually `127.0.0.1`; Docker Compose uses `db`)
+- **`DB_PORT`** (usually `5432`)
+- **`ALLOWED_HOSTS`** (optional, comma-separated; e.g. `localhost,127.0.0.1`)
+
+## Key routes
+
+### Web
+
+| URL | Purpose |
 |---|---|
 | `/` | Home |
-| `/mission/` | Our Mission |
+| `/mission/` | Mission |
 | `/contact/` | Contact |
-| `/games/` | All games (search + filter) |
+| `/games/` | Games list |
 | `/games/details/<id>` | Game detail |
 | `/games/add/` | Add game |
 | `/games/edit/<id>` | Edit game |
-| `/games/delete/<id>` | Delete game (with confirmation) |
-| `/events/` | All events (search + filter) |
+| `/games/delete/<id>` | Delete game |
+| `/events/` | Events list |
 | `/events/<id>/` | Event detail |
 | `/events/add/` | Create event |
 | `/events/edit/<id>` | Edit event |
-| `/events/delete/<id>` | Delete event (with confirmation) |
+| `/events/delete/<id>` | Delete event |
 | `/events/join/<id>/` | Join event |
-| `/admin/` | Admin panel (superuser only) |
+| `/reviews/` | Reviews list |
+| `/reviews/<id>/` | Review detail |
+| `/reviews/game/<game_id>/create/` | Create review for a game |
+| `/accounts/register/` | Register |
+| `/accounts/login/` | Login |
+| `/accounts/profile/` | Profile |
+| `/admin/` | Admin |
 
----
+### API
 
-## Forms and validation
+Base path is **`/api/`**.
 
-`GameForm` validates that min_players =< max_players, rating is between 0 and 5, and release date isn't in the future. `EventForm` validates that current_players =< max_players and the event date isn't in the past - this is also enforced at the model level with a custom validator (`validate_future_date`). Both delete forms render all fields as read-only so you can review what you're deleting before confirming.
+| URL | Purpose |
+|---|---|
+| `/api/genres/` | List genres |
+| `/api/games/` | List/create games |
+| `/api/games/<id>/` | Retrieve/update/delete a game |
+| `/api/events/` | List/create events |
+| `/api/events/<id>/` | Retrieve/update/delete an event |
+| `/api/reviews/` | List/create reviews |
+| `/api/reviews/<id>/` | Retrieve/update/delete a review |
+| `/api/collections/` | List/create current user’s collection entries |
+| `/api/collections/<id>/` | Retrieve/update/delete one collection entry |
+| `/api/users/me/` | Get/update the current user |
+| `/api/auth/token/` | Obtain auth token (DRF token auth) |
 
----
+API documentation:
 
-## Templates
+- **OpenAPI schema**: `/api/schema/`
+- **Swagger UI**: `/api/swagger/`
 
-All pages extend `base.html`. Create/Edit/Delete for both games and events share a single `_form_card.html` partial - it handles the form layout, cancel button, and submit button color (red for delete, blue otherwise) based on context variables.
+## Data / fixtures
 
-Custom template filters are in `games/templatetags/game_filters.py`:
-- `player_range` - formats min/max players as "2 - 4 players", used in game cards and detail page
-- `is_event_full` - returns True if an event has no free spots, used to show a "Full" badge on event cards
-- `dont_include_page` - removes a specified field from the query string
+`initial_data.json` is a fixture located under `games/fixtures/` and can be loaded with:
 
----
+```bash
+python manage.py loaddata initial_data.json
+```
+
+## Tests
+
+```bash
+python manage.py test
+```
 
 ## Project structure
 
 ```
 BoardGameNexus/
-├── games/          # Game catalog - models, views, forms, custom template filters
-├── events/         # Event management - includes session-based join tracking
-├── web/            # Static pages (home, mission, contact)
-├── templates/      # All HTML templates
-├── static/         # CSS and images
-└── BoardGameNexus/ # Project settings and URLs
+├── BoardGameNexus/  # Project settings/URLs
+├── accounts/        # Custom user + profile, auth views
+├── api/             # DRF API (endpoints, serializers, permissions)
+├── events/          # Events
+├── games/           # Games + genres
+├── reviews/         # Reviews + collections
+├── web/             # Static pages (home/mission/contact)
+├── templates/       # HTML templates
+├── static/          # Project-wide static files
+└── media/           # Uploaded files (created at runtime)
 ```
-
-Three apps, three models (`Genre`, `BoardGame`, `Event`), many-to-one and many-to-many relationships between them.
-
----
 
 ## Notes
 
-- The custom 404 page only shows when `DEBUG = False`
-- Session tracking for joined events resets if you clear browser cookies
-- Tested on Python 3.12 / macOS
+- **Custom 404** is shown only when `DEBUG = False`.
+- **Docker Compose** uses defaults for DB credentials if not provided (see `docker-compose.yml`).
+- Tested on **Python 3.12** / macOS.

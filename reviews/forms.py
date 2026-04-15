@@ -32,15 +32,9 @@ class ReviewForm(forms.ModelForm):
 
     def clean_rating(self):
         rating = self.cleaned_data.get("rating")
-        if rating is None:
+        if rating is None or rating < 1 or rating > 5:
             raise ValidationError("Rating must be between 1 and 5.")
-        try:
-            value = int(rating)
-        except (TypeError, ValueError):
-            raise ValidationError("Rating must be between 1 and 5.") from None
-        if not 1 <= value <= 5:
-            raise ValidationError("Rating must be between 1 and 5.")
-        return value
+        return rating
 
 
 class UserCollectionForm(forms.ModelForm):

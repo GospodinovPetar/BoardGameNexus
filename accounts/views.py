@@ -7,6 +7,7 @@ from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, TemplateView
 
+from accounts.tasks import send_welcome_email
 from reviews.models import GameReview, UserCollection
 
 from .forms import EditProfileForm, EditUserProfileForm, LoginForm, RegisterForm
@@ -28,6 +29,7 @@ class RegisterView(CreateView):
         response = super().form_valid(form)
         members_group = Group.objects.get(name="Members")
         self.object.groups.add(members_group)
+        send_welcome_email.delay(self.object.pk)
         messages.success(self.request, "Account created! Please log in.")
         return response
 
@@ -48,26 +50,21 @@ class ProfileView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        profile = getattr(user, "profile", None)
-        context["profile_user"] = user
-        context["user_profile"] = profile
-        context["reviews"] = self._reviews_for_user(user)
-        context["collections"] = self._collections_for_user(user)
-        return context
-
-    def _reviews_for_user(self, user):
-        return (
+        reviews = (
             GameReview.objects.filter(author=user)
             .select_related("game")
             .order_by("-created_at")
         )
-
-    def _collections_for_user(self, user):
-        return (
+        collections = (
             UserCollection.objects.filter(user=user)
             .select_related("game")
             .order_by("-added_at")
         )
+        context["profile_user"] = user
+        context["user_profile"] = user.profile
+        context["reviews"] = reviews
+        context["collections"] = collections
+        return context
 
 
 class EditProfileView(LoginRequiredMixin, View):
@@ -75,39 +72,29 @@ class EditProfileView(LoginRequiredMixin, View):
 
     def get(self, request):
         user = request.user
-        profile = getattr(user, "profile", None)
-        if profile is None:
-            from .models import UserProfile
-
-            profile, _ = UserProfile.objects.get_or_create(user=user)
         user_form = EditProfileForm(instance=user)
-        profile_form = EditUserProfileForm(instance=profile)
-        return render(
-            request,
-            self.template_name,
-            {"user_form": user_form, "profile_form": profile_form},
-        )
+        profile_form = EditUserProfileForm(instance=user.profile)
+        context = {
+            "user_form": user_form,
+            "profile_form": profile_form,
+        }
+        return render(request, self.template_name, context)
 
     def post(self, request):
         user = request.user
-        profile = getattr(user, "profile", None)
-        if profile is None:
-            from .models import UserProfile
-
-            profile, _ = UserProfile.objects.get_or_create(user=user)
         user_form = EditProfileForm(
             request.POST,
             request.FILES,
             instance=user,
         )
-        profile_form = EditUserProfileForm(request.POST, instance=profile)
+        profile_form = EditUserProfileForm(request.POST, instance=user.profile)
         if user_form.is_valid() and profile_form.is_valid():
             user_form.save()
             profile_form.save()
             messages.success(request, "Your profile has been updated.")
             return redirect("accounts:profile")
-        return render(
-            request,
-            self.template_name,
-            {"user_form": user_form, "profile_form": profile_form},
-        )
+        context = {
+            "user_form": user_form,
+            "profile_form": profile_form,
+        }
+        return render(request, self.template_name, context)
