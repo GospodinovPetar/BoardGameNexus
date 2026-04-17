@@ -11,7 +11,9 @@
     <div class="game-detail-card mx-auto">
         <div class="row g-0">
             <div class="col-md-6">
-                {% if game.image_url %}
+                {% if game.image %}
+                    <img src="{{ game.image.url }}" class="game-detail-img" alt="{{ game.title }}">
+                {% elif game.image_url %}
                     <img src="{{ game.image_url }}" class="game-detail-img" alt="{{ game.title }}">
                 {% else %}
                     <img src="{% static 'images/placeholder_game.png' %}" class="game-detail-img" alt="No image available for {{ game.title }}">
@@ -40,6 +42,7 @@
                                             <i class="bi bi-star text-secondary"></i>
                                         {% endif %}
                                     {% endfor %}
+                                <span class="ms-2 text-warning">{% star_rating game.review_avg %}</span>
                                 <span class="text-muted small">({{ game.review_avg|floatformat:1 }} / 5.0 from reviews)</span>
                                 </span>
                             </div>

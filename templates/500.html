@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}500 — Something went wrong{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <h1 class="mb-3">500 — Something went wrong</h1>
+    <p class="text-muted mb-4">An unexpected error occurred on our end. Please try again.</p>
+    <a href="{% url 'web:index' %}" class="btn btn-primary">Back to home</a>
+</div>
+{% endblock %}
+

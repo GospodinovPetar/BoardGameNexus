@@ -4,6 +4,9 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import TemplateView
 
+handler404 = "web.views.custom_404"
+handler500 = "web.views.custom_500"
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/", include("accounts.urls")),

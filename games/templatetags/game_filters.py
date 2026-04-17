@@ -19,3 +19,10 @@ def dont_include_page(querystring, field):
     parsed = parse_qs(querystring)
     parsed.pop(field, None)
     return urlencode(parsed, doseq=True)
+
+
+@register.simple_tag
+def star_rating(rating):
+    filled = int(rating)
+    empty = 5 - filled
+    return "★" * filled + "☆" * empty

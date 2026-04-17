@@ -84,6 +84,7 @@ class GameForm(forms.ModelForm):
             "max_players",
             "description",
             "image_url",
+            "image",
         ]
         widgets = {
             "release_date": forms.DateInput(
@@ -98,6 +99,7 @@ class GameForm(forms.ModelForm):
             "image_url": forms.URLInput(
                 attrs={"placeholder": "URL to the game's photo"}
             ),
+            "image": forms.ClearableFileInput(attrs={"class": "form-control"}),
         }
 
     def clean(self):

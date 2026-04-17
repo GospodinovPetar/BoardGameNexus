@@ -152,7 +152,9 @@
         <div class="col">
             <div class="card bg-dark text-white game-card h-100">
                 <a href="{% url 'games:game_details' game.pk %}">
-                    {% if game.image_url %}
+                    {% if game.image %}
+                        <img src="{{ game.image.url }}" class="card-img-top game-card-img" alt="{{ game.title }}">
+                    {% elif game.image_url %}
                         <img src="{{ game.image_url }}" class="card-img-top game-card-img" alt="{{ game.title }}">
                     {% else %}
                         <img src="{% static 'images/placeholder_game.png' %}" class="card-img-top game-card-img" alt="No image available for {{ game.title }}">

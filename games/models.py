@@ -49,6 +49,11 @@ class BoardGame(models.Model):
         null=True,
         blank=True,
     )
+    image = models.ImageField(
+        upload_to="games/",
+        blank=True,
+        null=True,
+    )
 
     def __str__(self):
         return self.title
