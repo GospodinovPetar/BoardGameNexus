@@ -1,4 +1,3 @@
-# BoardGameNexus — Django app
 FROM python:3.12-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -8,7 +7,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# libpq for psycopg2-binary; image libs for Pillow wheels
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         libpq5 \

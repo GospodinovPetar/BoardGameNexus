@@ -41,11 +41,46 @@ services:
       CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
       DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-noreply@boardgamenexus.com}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+      SMTP_USE_SSL: ${SMTP_USE_SSL:-false}
     volumes:
       - ./media:/app/media
       - ./staticfiles:/app/staticfiles
     ports:
       - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery:
+    build: .
+    command: celery -A BoardGameNexus worker -l info
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-docker-dev-only-change-me}
+      DB_NAME: ${DB_NAME:-boardgamenexus}
+      DB_USER: ${DB_USER:-boardgame}
+      DB_PASSWORD: ${DB_PASSWORD:-boardgame}
+      DB_HOST: db
+      DB_PORT: ${DB_PORT:-5432}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,web}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-noreply@boardgamenexus.com}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+      SMTP_USE_SSL: ${SMTP_USE_SSL:-false}
+    volumes:
+      - ./media:/app/media
+      - ./staticfiles:/app/staticfiles
     depends_on:
       db:
         condition: service_healthy

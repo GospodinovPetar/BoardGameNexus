@@ -312,40 +312,39 @@ body {
     transform: translateY(-5px);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2) !important;
 }
-/* Custom styles for games page */
 .game-card {
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    border: 1px solid var(--bs-gray-800); /* Subtle border for definition in dark mode */
-    border-radius: 12px; /* Slightly more rounded corners */
-    overflow: hidden; /* Ensure image corners match card */
+    border: 1px solid var(--bs-gray-800);
+    border-radius: 12px;
+    overflow: hidden;
 }
 .game-card:hover {
     transform: translateY(-5px) scale(1.02);
-    box-shadow: 0 0.5rem 1rem rgba(0, 255, 255, 0.2) !important; /* Cyan glow on hover */
+    box-shadow: 0 0.5rem 1rem rgba(0, 255, 255, 0.2) !important;
 }
 .game-card-img {
-    height: 250px; /* Make images a bit larger */
+    height: 250px;
     object-fit: cover;
     transition: transform 0.3s ease-in-out;
 }
 .game-card:hover .game-card-img {
-    transform: scale(1.05); /* Slight zoom on image hover */
+    transform: scale(1.05);
 }
 .game-card-title {
     font-size: 1.5rem;
     font-weight: bold;
-    color: var(--bs-primary); /* Use primary color for titles */
+    color: var(--bs-primary);
 }
 .game-card-info span {
-    display: block; /* Each info item on new line */
+    display: block;
     margin-bottom: 5px;
 }
 .game-card-info i {
     margin-right: 8px;
-    color: var(--bs-info); /* Icons in info color */
+    color: var(--bs-info);
 }
 .btn-view-details {
-    background-image: linear-gradient(to right, #00BFFF 0%, #00FFFF 100%); /* Blue-cyan gradient */
+    background-image: linear-gradient(to right, #00BFFF 0%, #00FFFF 100%);
     border: none;
     color: white;
     text-transform: uppercase;
@@ -355,10 +354,10 @@ body {
 }
 .btn-view-details:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4); /* Stronger glow on button hover */
+    box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
 }
 .search-form-container {
-    background-color: var(--bs-gray-900); /* Darker background for the form area */
+    background-color: var(--bs-gray-900);
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
@@ -371,92 +370,62 @@ body {
 .search-input::placeholder {
     color: var(--bs-gray-500);
 }
-.search-button, .add-game-button {
+.search-button, .add-game-button, .add-event-button {
     transition: all 0.2s ease;
 }
-.search-button:hover, .add-game-button:hover {
+.search-button:hover, .add-game-button:hover, .add-event-button:hover {
     transform: translateY(-2px);
     box-shadow: 0 3px 8px rgba(0, 255, 255, 0.3);
 }
-/* New styles for filter menu - shared between games and events */
 .filter-options-collapsed {
     border-top: 1px solid var(--bs-gray-700);
     padding-top: 15px;
     margin-top: 15px;
 }
 .filter-btn {
-    min-width: 44px; /* Ensure a good clickable area */
+    min-width: 44px;
 }
 .form-check-inline {
-    margin-right: 1rem; /* Spacing for inline checkboxes */
+    margin-right: 1rem;
 }
-
-/* Styles for search form container - shared between games and events */
-.search-form-container {
-    background-color: var(--bs-gray-900); /* Darker background for the form area */
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-.search-input { /* Assuming this might be used for direct input fields */
-    border: 1px solid var(--bs-primary);
-    background-color: var(--bs-gray-800);
-    color: var(--bs-white);
-}
-.search-input::placeholder {
-    color: var(--bs-gray-500);
-}
-.search-button, .add-game-button, .add-event-button { /* Updated to include add-event-button */
-    transition: all 0.2s ease;
-}
-.search-button:hover, .add-game-button:hover, .add-event-button:hover { /* Updated */
-    transform: translateY(-2px);
-    box-shadow: 0 3px 8px rgba(0, 255, 255, 0.3);
-}
-
-/* Footer Modernization */
 
 .footer h5 {
-    letter-spacing: 0.05em; /* Slightly more spaced out headings */
+    letter-spacing: 0.05em;
 }
 
 .footer .text-primary {
-    color: var(--bs-info) !important; /* Use info color for headings for contrast */
+    color: var(--bs-info) !important;
 }
 
 .footer ul {
     padding: 0;
-    list-style: none; /* Ensure no default list styling */
-}
-
-.footer ul li {
-    /* Removed margin-bottom here, relying on a.py-1 d-block for spacing */
+    list-style: none;
 }
 
 .footer ul li a {
-    transition: color 0.2s ease-in-out; /* Smooth color transition */
+    transition: color 0.2s ease-in-out;
 }
 
 .footer ul li a:hover {
     color: var(--bs-light) !important;
-    text-decoration: none !important; /* Remove underline on hover, let color change be the focus */
+    text-decoration: none !important;
 }
 
 .footer .social-icons a {
     transition: transform 0.2s ease-in-out, color 0.2s ease-in-out;
     display: inline-block;
-    font-size: 1.8rem; /* Slightly smaller icons for better balance */
+    font-size: 1.8rem;
 }
 
 .footer .social-icons a:hover {
-    transform: translateY(-3px); /* Less aggressive lift */
-    color: var(--bs-primary) !important; /* Use primary color for social icon hover */
+    transform: translateY(-3px);
+    color: var(--bs-primary) !important;
 }
 
 .footer hr {
-    border-color: rgba(255, 255, 255, 0.15); /* Slightly more visible HR */
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
 .footer .text-muted {
-    font-size: 0.9rem; /* Smaller font for copyright/muted text */
+    font-size: 0.9rem;
 }

@@ -7,7 +7,6 @@ from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, TemplateView
 
-from accounts.tasks import send_welcome_email
 from reviews.models import GameReview, UserCollection
 
 from .forms import EditProfileForm, EditUserProfileForm, LoginForm, RegisterForm
@@ -29,7 +28,6 @@ class RegisterView(CreateView):
         response = super().form_valid(form)
         members_group = Group.objects.get(name="Members")
         self.object.groups.add(members_group)
-        send_welcome_email.delay(self.object.pk)
         messages.success(self.request, "Account created! Please log in.")
         return response
 

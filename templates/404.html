@@ -6,7 +6,7 @@
 {% block content %}
 <div class="container-fluid text-center vh-50 d-flex flex-column justify-content-center align-items-center bg-dark text-white">
     <div class="p-4 rounded-4 shadow-lg bg-dark border border-secondary">
-        <h1 class="display-1 fw-bold text-danger mb-3 animate__animated animate__shakeX">404</h1>
+        <h1 class="display-1 fw-bold text-danger mb-3">404</h1>
         <h2 class="mb-4 text-warning">Error! The game has crashed...</h2>
         <p class="lead mb-4 text-white-75 px-lg-5">It seems the page you're looking for has been eaten by a dragon or simply doesn't exist. Perhaps you landed on the wrong map?</p>
 
@@ -15,27 +15,4 @@
         </a>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-<style>
-    .bg-dark {
-        background-color: #212529 !important; /* Ensure dark background */
-    }
-    .text-danger {
-        color: #dc3545 !important;
-    }
-    .text-warning {
-        color: #ffc107 !important;
-    }
-    .btn-primary {
-        background-color: #0d6efd;
-        border-color: #0d6efd;
-    }
-    .btn-primary:hover {
-        background-color: #0b5ed7;
-        border-color: #0a58ca;
-    }
-</style>
 {% endblock %}

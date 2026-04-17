@@ -7,7 +7,8 @@ def create_groups(apps, schema_editor):
     Group = apps.get_model("auth", "Group")
     Permission = apps.get_model("auth", "Permission")
 
-    members_group, _ = Group.objects.get_or_create(name="Members")
+    result = Group.objects.get_or_create(name="Members")
+    members_group = result[0]
     member_perms_codenames = [
         "add_gamereview",
         "change_gamereview",
@@ -20,13 +21,12 @@ def create_groups(apps, schema_editor):
         "view_gamereview",
     ]
     for codename in member_perms_codenames:
-        try:
-            perm = Permission.objects.get(codename=codename)
+        perm = Permission.objects.filter(codename=codename).first()
+        if perm:
             members_group.permissions.add(perm)
-        except Permission.DoesNotExist:
-            pass
 
-    moderators_group, _ = Group.objects.get_or_create(name="Moderators")
+    result = Group.objects.get_or_create(name="Moderators")
+    moderators_group = result[0]
     mod_perms_codenames = [
         "add_boardgame",
         "change_boardgame",
@@ -45,11 +45,9 @@ def create_groups(apps, schema_editor):
         "delete_usercollection",
     ]
     for codename in mod_perms_codenames:
-        try:
-            perm = Permission.objects.get(codename=codename)
+        perm = Permission.objects.filter(codename=codename).first()
+        if perm:
             moderators_group.permissions.add(perm)
-        except Permission.DoesNotExist:
-            pass
 
 
 def remove_groups(apps, schema_editor):

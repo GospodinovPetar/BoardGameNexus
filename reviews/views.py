@@ -24,20 +24,17 @@ class ReviewListView(ListView):
 
     def get_queryset(self):
         queryset = GameReview.objects.select_related("game", "author").all()
-        game_param = self.request.GET.get("game")
-        if game_param and str(game_param).isdigit():
-            queryset = queryset.filter(game_id=int(game_param))
+        game_id = self.request.GET.get("game")
+        if game_id:
+            queryset = queryset.filter(game_id=game_id)
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["page_title"] = "All Reviews"
-        game_param = self.request.GET.get("game")
-        if game_param and str(game_param).isdigit():
-            context["filtered_game"] = get_object_or_404(
-                BoardGame.objects.only("pk", "title"),
-                pk=int(game_param),
-            )
+        game_id = self.request.GET.get("game")
+        if game_id:
+            context["filtered_game"] = get_object_or_404(BoardGame, pk=game_id)
         return context
 
 

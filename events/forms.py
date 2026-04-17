@@ -65,10 +65,8 @@ class EventSearchForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["location"].choices = [
-            (loc, loc)
-            for loc in Event.objects.values_list("location", flat=True).distinct()
-        ]
+        locations = Event.objects.values_list("location", flat=True).distinct()
+        self.fields["location"].choices = [(loc, loc) for loc in locations]
 
     SORT_CHOICES = [
         ("name", "Name (A-Z)"),

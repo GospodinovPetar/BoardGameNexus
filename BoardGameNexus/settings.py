@@ -10,11 +10,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 
 DEBUG = True
 
-_allowed = os.environ.get("ALLOWED_HOSTS", "").strip()
-if _allowed:
-    ALLOWED_HOSTS = [h.strip() for h in _allowed.split(",") if h.strip()]
-else:
-    ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
 
 
 PROJECT_APPS = [
@@ -25,6 +21,7 @@ PROJECT_APPS = [
     "web",
     "django_celery_beat",
     "rest_framework",
+    "drf_spectacular",
     "api",
 ]
 
@@ -86,9 +83,6 @@ DATABASES = {
 }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -104,10 +98,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/6.0/topics/i18n/
-
 LANGUAGE_CODE = "en-us"
 
 TIME_ZONE = "Europe/Sofia"
@@ -115,10 +105,6 @@ TIME_ZONE = "Europe/Sofia"
 USE_I18N = True
 
 USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"  # Use 'staticfiles' for collected files
@@ -131,6 +117,8 @@ AUTH_USER_MODEL = "accounts.CustomUser"
 LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
+
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -147,6 +135,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
 }
@@ -158,5 +147,16 @@ CELERY_RESULT_BACKEND = os.environ.get(
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@boardgamenexus.com")
+
+EMAIL_HOST = os.environ.get("SMTP_HOST", "")
+EMAIL_PORT = int(os.environ.get("SMTP_PORT", "587"))
+EMAIL_HOST_USER = os.environ.get("SMTP_USERNAME", "")
+EMAIL_HOST_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+EMAIL_USE_TLS = os.environ.get("SMTP_USE_TLS", "true").lower() in ["1", "true", "yes"]
+EMAIL_USE_SSL = os.environ.get("SMTP_USE_SSL", "false").lower() in ["1", "true", "yes"]
+
+if EMAIL_HOST:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

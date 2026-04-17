@@ -1,151 +1,205 @@
 # BoardGame Nexus
 
-A Django web app for board game fans: browse a game catalog, create/join events, write reviews, and manage your personal collection. Includes a REST API with Swagger docs.
+BoardGame Nexus is a Django app for board game fans. It’s built around a simple idea: keep a clean catalog of games, plan game nights (events), and share reviews—plus a small REST API for the same data.
 
-## Features
+You can run it as a classic server-rendered Django site (Bootstrap UI) and also browse the API through Swagger.
 
-- **Games**: genre-based catalog of board games
-- **Events**: create events, link them to games, and join events (with capacity limits)
-- **Accounts**: custom user model + profile (bio/avatar/date of birth)
-- **Reviews**: one review per user per game (1–5 rating)
-- **Collections**: track games as “Want to Play / Currently Playing / Played / Owned”
-- **API**: DRF endpoints for games, events, reviews, collections, and current user
-- **API docs**: OpenAPI schema + Swagger UI
+## What you can do in the app
+
+- **Browse games**: a genre-based catalog of board games with optional images (URL or upload).
+- **Search & filter**:
+  - **Games**: filter by title, genres, rating range (community average), players, and release date.
+  - **Events**: filter by name, organizer, locations, date range, players, and linked games.
+- **Events**:
+  - Create events and link them to one or more games.
+  - Join an event until it reaches capacity (joining is tracked in the user’s session).
+- **Reviews**:
+  - Create, edit, and delete reviews.
+  - Enforced rule: **one review per user per game**, rating **1–5**.
+  - Reviews list supports filtering by a game via `?game=<id>`.
+- **Accounts & profiles**:
+  - Custom user model with **bio**, **avatar**, and **date of birth**.
+  - Auto-created `UserProfile` with extra fields (favourite genre, games played, location).
+- **Collections**:
+  - Track games as: **Want to Play / Currently Playing / Played / Owned** (plus notes).
+- **REST API**:
+  - DRF endpoints for games, events, reviews, collections, and the current user.
+  - Swagger UI at `/api/docs/`.
+
+## Roles / permissions (how moderation works)
+
+The project uses two Django groups:
+
+- **Members**: regular users (review + collection permissions).
+- **Moderators**: allowed to manage games and events.
+
+These groups are created by the `accounts.0002_create_user_groups` migration.
 
 ## Tech stack
 
 - **Backend**: Django 6.0.2, Django REST Framework
 - **DB**: PostgreSQL
+- **Cache/broker**: Redis (for Celery)
+- **Background jobs**: Celery
 - **UI**: Bootstrap 5, `django-crispy-forms` + `crispy-bootstrap5`
-- **Admin**: `django-jazzmin`
-- **API schema**: `drf-spectacular`
+- **Admin theme**: `django-jazzmin`
+- **API schema/docs**: `drf-spectacular` (OpenAPI + Swagger UI)
 - **Config**: `python-dotenv` (loads `.env`)
 
-## Quickstart
+## Quickstart (Docker)
 
-### Local development
-
-**Requirements**: Python 3.10+ (tested with 3.12), PostgreSQL
-
-```bash
-cp .env.example .env
-
-python -m venv .venv
-source .venv/bin/activate      # Windows: .venv\Scripts\activate
-
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py loaddata initial_data.json
-python manage.py createsuperuser
-python manage.py runserver
-```
-
-App runs at `http://127.0.0.1:8000/`
-
-### Docker (Postgres + Django)
+This is the easiest way to run the whole stack (Postgres + Redis + Django + Celery).
 
 ```bash
 cp .env.example .env
 docker compose up --build
 ```
 
-`docker-compose.yml` starts Postgres + Django. The `web` service runs migrations and loads `initial_data.json` on startup, then serves Django on port 8000.
+This starts:
+- `db` (Postgres)
+- `redis`
+- `web` (Django dev server on port 8000)
+- `celery` (worker for background tasks like welcome emails)
+
+On startup, the `web` service runs migrations and loads the initial fixture.
+
+Open the app at `http://127.0.0.1:8000/`.
+
+### Helpful Docker commands
+
+```bash
+# stop containers
+docker compose down
+
+# rebuild after code or dependency changes
+docker compose up --build
+
+# start in background
+docker compose up -d --build
+
+# view logs
+docker compose logs -f
+```
+
+## Local development (optional, no Docker)
+
+```bash
+cp .env.example .env
+
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+python manage.py migrate
+python manage.py loaddata initial_data.json
+
+# Terminal 1: Django
+python manage.py runserver
+
+# Terminal 2: Celery worker
+celery -A BoardGameNexus worker -l info
+```
 
 ## Environment variables
 
-The project reads config from `.env` (loaded via `python-dotenv`). Required variables:
+The project reads config from `.env` (loaded via `python-dotenv`).
 
-- **`SECRET_KEY`**
+### Django / host
+
+- **`SECRET_KEY`**: Django secret key
+- **`DEBUG`**: `True/False` (currently set in settings for development)
+- **`ALLOWED_HOSTS`**: comma-separated (e.g. `localhost,127.0.0.1`)
+
+### Database (Postgres)
+
 - **`DB_NAME`**
 - **`DB_USER`**
 - **`DB_PASSWORD`**
-- **`DB_HOST`** (local dev usually `127.0.0.1`; Docker Compose uses `db`)
-- **`DB_PORT`** (usually `5432`)
-- **`ALLOWED_HOSTS`** (optional, comma-separated; e.g. `localhost,127.0.0.1`)
+- **`DB_HOST`**: local dev is usually `127.0.0.1`, Docker Compose uses `db`
+- **`DB_PORT`**: usually `5432`
+
+### Celery / Redis
+
+- **`CELERY_BROKER_URL`**: default `redis://redis:6379/0` in Docker
+- **`CELERY_RESULT_BACKEND`**: default `redis://redis:6379/0` in Docker
+
+### Email (SMTP)
+
+Email is configured via env vars. If `SMTP_HOST` is empty, Django falls back to the **console email backend** (prints emails to the server logs).
+
+- **`DEFAULT_FROM_EMAIL`**
+- **`SMTP_HOST`**
+- **`SMTP_PORT`** (Gmail typically `587`)
+- **`SMTP_USERNAME`**
+- **`SMTP_PASSWORD`** (use an app password)
+- **`SMTP_USE_TLS`** (`true/false`)
+- **`SMTP_USE_SSL`** (`true/false`)
 
 ## Key routes
 
 ### Web
 
-| URL | Purpose |
-|---|---|
-| `/` | Home |
-| `/mission/` | Mission |
-| `/contact/` | Contact |
-| `/games/` | Games list |
-| `/games/details/<id>` | Game detail |
-| `/games/add/` | Add game |
-| `/games/edit/<id>` | Edit game |
-| `/games/delete/<id>` | Delete game |
-| `/events/` | Events list |
-| `/events/<id>/` | Event detail |
-| `/events/add/` | Create event |
-| `/events/edit/<id>` | Edit event |
-| `/events/delete/<id>` | Delete event |
-| `/events/join/<id>/` | Join event |
-| `/reviews/` | Reviews list |
-| `/reviews/<id>/` | Review detail |
-| `/reviews/game/<game_id>/create/` | Create review for a game |
-| `/accounts/register/` | Register |
-| `/accounts/login/` | Login |
-| `/accounts/profile/` | Profile |
-| `/admin/` | Admin |
+- `/` — Home
+- `/mission/`, `/contact/` — Static pages
+- `/games/` — Games list + filters
+- `/events/` — Events list + filters
+- `/reviews/` — Reviews list (supports `?game=<id>`)
+- `/accounts/register/`, `/accounts/login/`, `/accounts/profile/`
+- `/admin/` — Django admin
 
 ### API
 
 Base path is **`/api/`**.
 
-| URL | Purpose |
-|---|---|
-| `/api/genres/` | List genres |
-| `/api/games/` | List/create games |
-| `/api/games/<id>/` | Retrieve/update/delete a game |
-| `/api/events/` | List/create events |
-| `/api/events/<id>/` | Retrieve/update/delete an event |
-| `/api/reviews/` | List/create reviews |
-| `/api/reviews/<id>/` | Retrieve/update/delete a review |
-| `/api/collections/` | List/create current user’s collection entries |
-| `/api/collections/<id>/` | Retrieve/update/delete one collection entry |
-| `/api/users/me/` | Get/update the current user |
-| `/api/auth/token/` | Obtain auth token (DRF token auth) |
+- `GET /api/genres/`
+- `GET/POST /api/games/`
+- `GET/PATCH/DELETE /api/games/<id>/`
+- `GET/POST /api/events/`
+- `GET/PATCH/DELETE /api/events/<id>/`
+- `GET/POST /api/reviews/`
+- `GET/PATCH/DELETE /api/reviews/<id>/`
+- `GET/POST /api/collections/` (requires login)
+- `GET/PATCH/DELETE /api/collections/<id>/` (requires login + ownership/moderator)
+- `GET/PATCH /api/users/me/` (requires login)
+- `POST /api/auth/token/` (DRF token auth)
 
-API documentation:
-
+API docs:
+- **Swagger UI**: `/api/docs/`
 - **OpenAPI schema**: `/api/schema/`
-- **Swagger UI**: `/api/swagger/`
 
-## Data / fixtures
+## Background tasks (Celery)
 
-`initial_data.json` is a fixture located under `games/fixtures/` and can be loaded with:
+- **Welcome email**: sent after a new user account is created (only if the user has an email).
+- **Weekly digest** (`games.tasks.send_weekly_digest`): currently logs a simple digest (counts of games/events/reviews).
+
+## Fixtures
+
+There’s a starter dataset at `games/fixtures/initial_data.json` (genres + a few games and events).
+
+Load it with:
 
 ```bash
 python manage.py loaddata initial_data.json
 ```
 
-## Tests
+## Running tests
 
 ```bash
-python manage.py test
+python manage.py test accounts games reviews events api web --verbosity=2
 ```
 
 ## Project structure
 
 ```
 BoardGameNexus/
-├── BoardGameNexus/  # Project settings/URLs
-├── accounts/        # Custom user + profile, auth views
-├── api/             # DRF API (endpoints, serializers, permissions)
-├── events/          # Events
-├── games/           # Games + genres
+├── BoardGameNexus/  # Settings, root URLs, Celery config
+├── accounts/        # Custom user + profile, auth views, welcome email task
+├── api/             # DRF API (views, serializers, permissions, urls)
+├── events/          # Events + search form
+├── games/           # Games + genres + weekly digest task
 ├── reviews/         # Reviews + collections
-├── web/             # Static pages (home/mission/contact)
+├── web/             # Home/mission/contact pages + error handlers
 ├── templates/       # HTML templates
 ├── static/          # Project-wide static files
 └── media/           # Uploaded files (created at runtime)
 ```
-
-## Notes
-
-- **Custom 404** is shown only when `DEBUG = False`.
-- **Docker Compose** uses defaults for DB credentials if not provided (see `docker-compose.yml`).
-- Tested on **Python 3.12** / macOS.

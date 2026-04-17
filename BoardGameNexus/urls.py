@@ -2,7 +2,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
-from django.views.generic import TemplateView
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 handler404 = "web.views.custom_404"
 handler500 = "web.views.custom_500"
@@ -15,9 +15,10 @@ urlpatterns = [
     path("events/", include("events.urls")),
     path("reviews/", include("reviews.urls")),
     path("api/", include(("api.urls", "api"), namespace="api")),
+    path("api/schema/", SpectacularAPIView.as_view(), name="api_schema"),
     path(
         "api/docs/",
-        TemplateView.as_view(template_name="api/api_docs.html"),
+        SpectacularSwaggerView.as_view(url_name="api_schema"),
         name="api_docs",
     ),
 ]

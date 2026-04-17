@@ -1,11 +1,9 @@
 from django.db.models import Avg, FloatField, Value
 from django.db.models.functions import Coalesce
-from rest_framework import generics, serializers, status
+from rest_framework import generics, serializers
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
-from rest_framework.response import Response
-from rest_framework.views import APIView
 
-from accounts.models import CustomUser, UserProfile
+from accounts.models import CustomUser
 from events.models import Event
 from games.models import BoardGame, Genre
 from reviews.models import GameReview, UserCollection
@@ -18,18 +16,7 @@ from .serializers import (
     GameReviewSerializer,
     GenreSerializer,
     UserCollectionSerializer,
-    UserProfileSerializer,
 )
-
-
-def _boardgames_with_review_avg(queryset):
-    return queryset.annotate(
-        review_avg=Coalesce(
-            Avg("reviews__rating"),
-            Value(0.0),
-            output_field=FloatField(),
-        )
-    )
 
 
 class GenreListView(generics.ListAPIView):
@@ -44,7 +31,13 @@ class BoardGameListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         queryset = BoardGame.objects.select_related("genre").all()
-        queryset = _boardgames_with_review_avg(queryset)
+        queryset = queryset.annotate(
+            review_avg=Coalesce(
+                Avg("reviews__rating"),
+                Value(0.0),
+                output_field=FloatField(),
+            )
+        )
         queryset = queryset.order_by("title")
 
         title = self.request.query_params.get("title")
@@ -62,8 +55,15 @@ class BoardGameDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         queryset = BoardGame.objects.select_related("genre").all()
-        queryset = _boardgames_with_review_avg(queryset)
-        return queryset.order_by("title")
+        queryset = queryset.annotate(
+            review_avg=Coalesce(
+                Avg("reviews__rating"),
+                Value(0.0),
+                output_field=FloatField(),
+            )
+        )
+        queryset = queryset.order_by("title")
+        return queryset
 
 
 class EventListCreateView(generics.ListCreateAPIView):

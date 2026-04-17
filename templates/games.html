@@ -9,37 +9,37 @@
 <style>
     .game-card {
         transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-        border: 1px solid var(--bs-gray-800); /* Subtle border for definition in dark mode */
-        border-radius: 12px; /* Slightly more rounded corners */
-        overflow: hidden; /* Ensure image corners match card */
+        border: 1px solid var(--bs-gray-800);
+        border-radius: 12px;
+        overflow: hidden;
     }
     .game-card:hover {
         transform: translateY(-5px) scale(1.02);
-        box-shadow: 0 0.5rem 1rem rgba(0, 255, 255, 0.2) !important; /* Cyan glow on hover */
+        box-shadow: 0 0.5rem 1rem rgba(0, 255, 255, 0.2) !important;
     }
     .game-card-img {
-        height: 250px; /* Make images a bit larger */
+        height: 250px;
         object-fit: cover;
         transition: transform 0.3s ease-in-out;
     }
     .game-card:hover .game-card-img {
-        transform: scale(1.05); /* Slight zoom on image hover */
+        transform: scale(1.05);
     }
     .game-card-title {
         font-size: 1.5rem;
         font-weight: bold;
-        color: var(--bs-primary); /* Use primary color for titles */
+        color: var(--bs-primary);
     }
     .game-card-info span {
-        display: block; /* Each info item on new line */
+        display: block;
         margin-bottom: 5px;
     }
     .game-card-info i {
         margin-right: 8px;
-        color: var(--bs-info); /* Icons in info color */
+        color: var(--bs-info);
     }
     .btn-view-details {
-        background-image: linear-gradient(to right, #00BFFF 0%, #00FFFF 100%); /* Blue-cyan gradient */
+        background-image: linear-gradient(to right, #00BFFF 0%, #00FFFF 100%);
         border: none;
         color: white;
         text-transform: uppercase;
@@ -49,10 +49,10 @@
     }
     .btn-view-details:hover {
         transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4); /* Stronger glow on button hover */
+        box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
     }
     .search-form-container {
-        background-color: var(--bs-gray-900); /* Darker background for the form area */
+        background-color: var(--bs-gray-900);
         padding: 20px;
         border-radius: 12px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
