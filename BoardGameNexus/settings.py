@@ -8,9 +8,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
+ALLOWED_HOSTS = ["boardgamenexus.azurewebsites.net"]
 
 
 PROJECT_APPS = [
@@ -40,6 +40,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -112,6 +113,8 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",  # This is where you put your project-wide static files
 ]
 
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 AUTH_USER_MODEL = "accounts.CustomUser"
 
 LOGIN_URL = "/accounts/login/"
@@ -122,6 +125,9 @@ SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CSRF_TRUSTED_ORIGINS = ["https://boardgamenexus.azurewebsites.net"]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

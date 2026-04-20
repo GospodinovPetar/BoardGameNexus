@@ -135,6 +135,14 @@ Email is configured via env vars. If `SMTP_HOST` is empty, Django falls back to 
 - **`SMTP_USE_TLS`** (`true/false`)
 - **`SMTP_USE_SSL`** (`true/false`)
 
+## Deploying to Azure App Service (quick notes)
+
+This repo is set up to serve static files with **WhiteNoise** (so you don’t need a separate CDN just to get going).
+
+- **Startup command**: set your App Service startup command to run `startup.sh` (or run the equivalent command directly).
+- **Required app settings**: configure the same env vars as in `.env.example` (at minimum `SECRET_KEY` + DB settings).
+- **Static files**: `startup.sh` runs `collectstatic` and WhiteNoise serves from `staticfiles/`.
+
 ## Key routes
 
 ### Web
