@@ -23,4 +23,7 @@ urlpatterns = [
     ),
 ]
 
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# User uploads (avatars, game images). In production, point MEDIA_URL to object storage
+# or serve files with nginx; for local / Docker, enable DEBUG or SERVE_MEDIA_IN_APP.
+if settings.DEBUG or getattr(settings, "SERVE_MEDIA_IN_APP", False):
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

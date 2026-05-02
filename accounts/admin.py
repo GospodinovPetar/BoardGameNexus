@@ -8,8 +8,9 @@ from .models import CustomUser, UserProfile
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
     fieldsets = UserAdmin.fieldsets + (
-        ("Profile", {"fields": ("bio", "avatar", "date_of_birth")}),
+        ("Profile", {"fields": ("bio", "avatar", "date_of_birth", "no_show_strikes")}),
     )
+    list_display = UserAdmin.list_display + ("no_show_strikes",)
 
 
 admin.site.unregister(Group)

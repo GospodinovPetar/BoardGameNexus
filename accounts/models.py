@@ -7,6 +7,7 @@ class CustomUser(AbstractUser):
     bio = models.TextField(blank=True, default="")
     avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
     date_of_birth = models.DateField(null=True, blank=True)
+    no_show_strikes = models.PositiveSmallIntegerField(default=0)
 
     class Meta:
         verbose_name = "User"

@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
 from django.contrib.auth.views import LoginView, LogoutView
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, TemplateView
@@ -60,6 +60,31 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         )
         context["profile_user"] = user
         context["user_profile"] = user.profile
+        context["reviews"] = reviews
+        context["collections"] = collections
+        return context
+
+
+class PublicProfileView(LoginRequiredMixin, TemplateView):
+    """Read-only profile page for any user, accessible to authenticated users."""
+
+    template_name = "accounts/profile.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        profile_user = get_object_or_404(CustomUser, pk=self.kwargs["pk"])
+        reviews = (
+            GameReview.objects.filter(author=profile_user)
+            .select_related("game")
+            .order_by("-created_at")
+        )
+        collections = (
+            UserCollection.objects.filter(user=profile_user)
+            .select_related("game")
+            .order_by("-added_at")
+        )
+        context["profile_user"] = profile_user
+        context["user_profile"] = getattr(profile_user, "profile", None)
         context["reviews"] = reviews
         context["collections"] = collections
         return context

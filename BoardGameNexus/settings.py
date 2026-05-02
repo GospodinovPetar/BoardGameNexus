@@ -8,9 +8,32 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
-DEBUG = False
+DEBUG = os.environ.get("DEBUG", "False").lower() in ("1", "true", "yes")
 
-ALLOWED_HOSTS = ["boardgamenexus.azurewebsites.net"]
+# When True, /media/ is served by the app (dev / Docker). In production, use a reverse
+# proxy or object storage; set to false and serve media outside Django.
+SERVE_MEDIA_IN_APP = os.environ.get("SERVE_MEDIA_IN_APP", str(DEBUG)).lower() in (
+    "1",
+    "true",
+    "yes",
+)
+
+_allowed_hosts_env = os.environ.get("ALLOWED_HOSTS", "boardgamenexus.azurewebsites.net")
+ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts_env.split(",") if h.strip()]
+
+# Local / Docker: allow form posts and CSRF on these origins (override with env in prod)
+_csrf_origins = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
+if _csrf_origins:
+    CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_origins.split(",") if o.strip()]
+else:
+    CSRF_TRUSTED_ORIGINS = [
+        "https://boardgamenexus.azurewebsites.net",
+    ]
+    if DEBUG:
+        CSRF_TRUSTED_ORIGINS += [
+            "http://127.0.0.1:8000",
+            "http://localhost:8000",
+        ]
 
 
 PROJECT_APPS = [
@@ -115,6 +138,10 @@ STATICFILES_DIRS = [
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+# In development, serve static from app directories without running collectstatic first.
+if DEBUG:
+    WHITENOISE_USE_FINDERS = True
+
 AUTH_USER_MODEL = "accounts.CustomUser"
 
 LOGIN_URL = "/accounts/login/"
@@ -127,7 +154,6 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-CSRF_TRUSTED_ORIGINS = ["https://boardgamenexus.azurewebsites.net"]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -146,11 +172,19 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 10,
 }
 
-CELERY_BROKER_URL = "memory://"
-CELERY_RESULT_BACKEND = "cache+memory://"
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "memory://")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "cache+memory://")
 
-CELERY_TASK_ALWAYS_EAGER = True
-CELERY_TASK_EAGER_PROPAGATES = True
+# Local tests/dev may run eagerly; in Docker we typically want async.
+CELERY_TASK_ALWAYS_EAGER = os.environ.get("CELERY_TASK_ALWAYS_EAGER", "true").lower() in [
+    "1",
+    "true",
+    "yes",
+]
+CELERY_TASK_EAGER_PROPAGATES = (
+    os.environ.get("CELERY_TASK_EAGER_PROPAGATES", "true").lower()
+    in ["1", "true", "yes"]
+)
 
 if "rediss://" in CELERY_BROKER_URL:
     CELERY_BROKER_USE_SSL = {

@@ -16,8 +16,6 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -32,6 +30,9 @@ services:
              exec python manage.py runserver 0.0.0.0:8000"
     environment:
       SECRET_KEY: ${SECRET_KEY:-docker-dev-only-change-me}
+      # Dev container: static + /media/ must be served; host .env DEBUG=false would break images
+      DEBUG: "true"
+      SERVE_MEDIA_IN_APP: "true"
       DB_NAME: ${DB_NAME:-boardgamenexus}
       DB_USER: ${DB_USER:-boardgame}
       DB_PASSWORD: ${DB_PASSWORD:-boardgame}
@@ -40,6 +41,8 @@ services:
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,web}
       CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
+      CELERY_TASK_ALWAYS_EAGER: "false"
+      CELERY_TASK_EAGER_PROPAGATES: "false"
       DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-noreply@boardgamenexus.com}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}
@@ -71,6 +74,8 @@ services:
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,web}
       CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
+      CELERY_TASK_ALWAYS_EAGER: "false"
+      CELERY_TASK_EAGER_PROPAGATES: "false"
       DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-noreply@boardgamenexus.com}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}

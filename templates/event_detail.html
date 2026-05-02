@@ -3,7 +3,29 @@
 
 {% block title %}{{ event.name }} - Event Details{% endblock %}
 
-{% block extra_css %}{% endblock %}
+{% block extra_css %}
+<style>
+    .event-game-card {
+        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        border: 1px solid var(--bs-gray-700);
+        border-radius: 10px;
+        overflow: hidden;
+        background: var(--bs-gray-900);
+    }
+    .event-game-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 20px rgba(13, 202, 240, 0.22);
+        border-color: var(--bs-info) !important;
+    }
+    .event-game-thumb {
+        width: 90px;
+        min-width: 90px;
+        height: 90px;
+        object-fit: cover;
+        border-radius: 8px 0 0 8px;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -31,7 +53,11 @@
                         <span class="me-2">{{ event.current_players }} / {{ event.max_players }}</span>
                         {% widthratio event.current_players event.max_players 100 as percentage %}
                         <div class="progress" style="height: 20px;">
-                            <div class="progress-bar bg-primary progress-bar-event-detail" role="progressbar" style="width: {{ percentage }}%;" aria-valuenow="{{ event.current_players }}" aria-valuemin="0" aria-valuemax="{{ event.max_players }}">
+                            <div class="progress-bar bg-primary progress-bar-event-detail" role="progressbar"
+                                 style="width: {{ percentage }}%;"
+                                 aria-valuenow="{{ event.current_players }}"
+                                 aria-valuemin="0"
+                                 aria-valuemax="{{ event.max_players }}">
                                 {% if percentage > 0 %}{{ percentage|floatformat:0 }}%{% endif %}
                             </div>
                         </div>
@@ -45,36 +71,130 @@
             </p>
 
             {% if event.games.all %}
-            <h5 class="event-description-heading text-start mt-4">Games to be played:</h5>
-            <div class="d-flex flex-wrap gap-2 mb-4">
+            <h5 class="event-description-heading text-start mt-4">
+                <i class="bi bi-dice-5 me-2 text-info"></i>Games to be played:
+            </h5>
+            <div class="row row-cols-1 row-cols-sm-2 g-3 mb-4">
                 {% for game in event.games.all %}
-                <span class="badge bg-primary rounded-pill p-2">
-                    <i class="bi bi-dice-5 me-1"></i> {{ game.title }}
-                </span>
+                <div class="col">
+                    <a href="{% url 'games:game_details' game.pk %}" class="text-decoration-none d-block h-100">
+                        <div class="event-game-card d-flex align-items-stretch h-100">
+                            {% if game.image %}
+                                <img src="{{ game.image.url }}" alt="{{ game.title }}" class="event-game-thumb">
+                            {% elif game.image_url %}
+                                <img src="{{ game.image_url }}" alt="{{ game.title }}" class="event-game-thumb">
+                            {% else %}
+                                <img src="{% static 'images/placeholder_game.png' %}" alt="{{ game.title }}" class="event-game-thumb">
+                            {% endif %}
+                            <div class="d-flex flex-column justify-content-center px-3 py-2 gap-1">
+                                <span class="fw-semibold text-white lh-sm">{{ game.title }}</span>
+                                <small class="text-muted">
+                                    <i class="bi bi-tag-fill me-1"></i>{{ game.genre.name }}
+                                </small>
+                                <small class="text-muted">
+                                    <i class="bi bi-people-fill me-1"></i>{{ game.min_players }}–{{ game.max_players }} players
+                                </small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
                 {% endfor %}
             </div>
             {% endif %}
 
+            {# ── Attendance window status banner ── #}
+            {% if attendance_window_open %}
+            <div class="alert alert-success d-flex align-items-center gap-2 mb-4" role="alert">
+                <i class="bi bi-door-open-fill fs-5"></i>
+                <div>
+                    <strong>Attendance window is open!</strong>
+                    {% if is_organizer %}
+                    Mark participants as present below before the window closes (1 hour after start).
+                    {% else %}
+                    The organizer is marking attendance right now.
+                    {% endif %}
+                </div>
+            </div>
+            {% elif attendance_window_closed %}
+            <div class="alert alert-secondary d-flex align-items-center gap-2 mb-4" role="alert">
+                <i class="bi bi-door-closed-fill fs-5"></i>
+                <div>
+                    <strong>Attendance window closed.</strong>
+                    Participants who were not marked present have received a no-show strike.
+                </div>
+            </div>
+            {% endif %}
+
+            {# ── Registration status for the current user ── #}
+            {% if user.is_authenticated and user_registration %}
+            <div class="mb-4">
+                {% if user_registration.status == STATUS_REGISTERED %}
+                <div class="alert alert-info d-flex align-items-center gap-2" role="alert">
+                    <i class="bi bi-check-circle-fill fs-5"></i>
+                    <div>You are <strong>registered</strong> for this event.</div>
+                </div>
+                {% elif user_registration.status == STATUS_PRESENT %}
+                <div class="alert alert-success d-flex align-items-center gap-2" role="alert">
+                    <i class="bi bi-person-check-fill fs-5"></i>
+                    <div>Your attendance has been <strong>confirmed</strong>. Enjoy the game!</div>
+                </div>
+                {% elif user_registration.status == "removed" %}
+                <div class="alert alert-warning d-flex align-items-center gap-2" role="alert">
+                    <i class="bi bi-x-circle-fill fs-5"></i>
+                    <div>You have been <strong>removed</strong> from this event by the organizer.</div>
+                </div>
+                {% elif user_registration.status == STATUS_NO_SHOW %}
+                <div class="alert alert-danger d-flex align-items-center gap-2" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+                    <div>You received a <strong>no-show strike</strong> for missing this event.</div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {# ── Action buttons ── #}
             <div class="mt-4 pt-3 p-4 border-top border-secondary">
-                <div class="row row-cols-1 row-cols-md-4 g-3">
+                <div class="row row-cols-1 row-cols-md-3 g-3">
                     <div class="col">
                         <a href="{% url 'events:events_list' %}" class="btn btn-back-events btn-action-uniform w-100">
                             <i class="bi bi-arrow-left me-2"></i> Back
                         </a>
                     </div>
+
+                    {% if user.is_authenticated and not user_registration and event.has_free_spots and is_before_event %}
                     <div class="col">
-                        <a href="{% url 'events:join' event.pk %}" class="btn btn-join-event-lg btn-action-uniform w-100">
-                            <i class="bi bi-box-arrow-in-right me-2"></i> Join
-                        </a>
+                        <form method="post" action="{% url 'events:join' event.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-join-event-lg btn-action-uniform w-100">
+                                <i class="bi bi-box-arrow-in-right me-2"></i> Join
+                            </button>
+                        </form>
                     </div>
-                    {% if perms.events.change_event %}
+                    {% elif user.is_authenticated and not user_registration and not event.has_free_spots %}
+                    <div class="col">
+                        <button class="btn btn-secondary btn-action-uniform w-100" disabled>
+                            <i class="bi bi-x-circle me-2"></i> Full
+                        </button>
+                    </div>
+                    {% endif %}
+
+                    {# Share button #}
+                    <div class="col">
+                        <button id="shareBtn" type="button" class="btn btn-outline-info btn-action-uniform w-100"
+                                data-event-name="{{ event.name }}"
+                                data-event-date="{{ event.date_time|date:'d M Y H:i' }}"
+                                data-event-location="{{ event.location }}"
+                                data-event-url="{{ request.scheme }}://{{ request.get_host }}{% url 'events:event_detail' event.pk %}">
+                            <i class="bi bi-share-fill me-2"></i> Share
+                        </button>
+                    </div>
+
+                    {% if can_edit_event %}
                     <div class="col">
                         <a href="{% url 'events:edit_event' event.pk %}" class="btn btn-action-primary btn-action-uniform w-100">
                             <i class="bi bi-pencil me-2"></i> Edit
                         </a>
                     </div>
-                    {% endif %}
-                    {% if perms.events.delete_event %}
                     <div class="col">
                         <a href="{% url 'events:delete_event' event.pk %}" class="btn btn-danger btn-action-uniform w-100">
                             <i class="bi bi-trash me-2"></i> Delete
@@ -83,7 +203,163 @@
                     {% endif %}
                 </div>
             </div>
+
+            {# ── Organizer management panel ── #}
+            {% if is_organizer %}
+            <div class="mt-5">
+                <h5 class="mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-people-fill text-primary"></i> Manage Participants
+                    <span class="badge bg-primary ms-1">{{ registrations|length }}</span>
+                </h5>
+
+                {% if registrations %}
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Participant</th>
+                                <th>Status</th>
+                                <th>Joined</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reg in registrations %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        {% if reg.user.avatar %}
+                                        <img src="{{ reg.user.avatar.url }}" alt="{{ reg.user.username }}"
+                                             class="rounded-circle" style="width:36px;height:36px;object-fit:cover;">
+                                        {% else %}
+                                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
+                                             style="width:36px;height:36px;min-width:36px;">
+                                            <i class="bi bi-person-fill text-light small"></i>
+                                        </div>
+                                        {% endif %}
+                                        <a href="{% url 'accounts:public_profile' reg.user.pk %}"
+                                           class="text-decoration-none fw-semibold">
+                                            {{ reg.user.username }}
+                                            {% if reg.user.get_full_name %}
+                                            <small class="text-muted d-block">({{ reg.user.get_full_name }})</small>
+                                            {% endif %}
+                                        </a>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if reg.status == STATUS_REGISTERED %}
+                                    <span class="badge bg-info text-dark">
+                                        <i class="bi bi-clock me-1"></i> Registered
+                                    </span>
+                                    {% elif reg.status == STATUS_PRESENT %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle me-1"></i> Present
+                                    </span>
+                                    {% elif reg.status == STATUS_NO_SHOW %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-x-circle me-1"></i> No Show
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted small">{{ reg.joined_at|date:"d M Y H:i" }}</td>
+                                <td class="text-end">
+                                    <div class="d-flex gap-2 justify-content-end">
+                                        {# Mark present — only during window and only for registered #}
+                                        {% if attendance_window_open and reg.status == STATUS_REGISTERED %}
+                                        <form method="post"
+                                              action="{% url 'events:mark_present' event.pk reg.pk %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-success btn-sm"
+                                                    title="Mark as present">
+                                                <i class="bi bi-person-check-fill me-1"></i> Present
+                                            </button>
+                                        </form>
+                                        {% endif %}
+
+                                        {# Remove — only for registered or present (not no-show) #}
+                                        {% if reg.status == STATUS_REGISTERED or reg.status == STATUS_PRESENT %}
+                                        <form method="post"
+                                              action="{% url 'events:remove_participant' event.pk reg.pk %}"
+                                              onsubmit="return confirm('Remove {{ reg.user.username }} from this event?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-danger btn-sm"
+                                                    title="Remove participant">
+                                                <i class="bi bi-person-x-fill me-1"></i> Remove
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% else %}
+                <div class="text-center text-muted py-4 border border-secondary rounded">
+                    <i class="bi bi-people fs-2 d-block mb-2"></i>
+                    No participants have registered yet.
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const btn = document.getElementById('shareBtn');
+    if (!btn) return;
+
+    btn.addEventListener('click', function () {
+        const name     = btn.dataset.eventName;
+        const date     = btn.dataset.eventDate;
+        const location = btn.dataset.eventLocation;
+        const url      = btn.dataset.eventUrl;
+
+        const text = `Join me for "${name}" on ${date} at ${location}! Register here: ${url}`;
+        const shareData = { title: name, text: text, url: url };
+
+        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+            navigator.share(shareData).catch(function (err) {
+                if (err.name !== 'AbortError') copyFallback(url, text);
+            });
+        } else {
+            copyFallback(url, text);
+        }
+    });
+
+    function copyFallback(url, text) {
+        const toCopy = text || url;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(toCopy).then(function () {
+                showToast('Event link copied to clipboard!');
+            }).catch(function () {
+                promptCopy(toCopy);
+            });
+        } else {
+            promptCopy(toCopy);
+        }
+    }
+
+    function promptCopy(text) {
+        window.prompt('Copy this event link:', text);
+    }
+
+    function showToast(msg) {
+        const toast = document.createElement('div');
+        toast.className = 'position-fixed bottom-0 end-0 m-3 alert alert-success alert-dismissible fade show shadow';
+        toast.style.zIndex = 9999;
+        toast.innerHTML = `<i class="bi bi-clipboard-check me-2"></i>${msg}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+        document.body.appendChild(toast);
+        setTimeout(function () { toast.remove(); }, 3500);
+    }
+}());
+</script>
 {% endblock %}
