@@ -429,3 +429,60 @@ body {
 .footer .text-muted {
     font-size: 0.9rem;
 }
+
+.suggested-section {
+    margin-bottom: 2.5rem;
+}
+
+.suggested-scroll-container {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.suggested-scroll-container::-webkit-scrollbar {
+    display: none;
+}
+
+.suggested-event-card {
+    min-width: 260px;
+    max-width: 260px;
+    background-color: var(--bs-gray-900);
+    border: 1px solid rgba(255, 165, 0, 0.25);
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.suggested-event-card:hover {
+    box-shadow: 0 0 16px rgba(255, 165, 0, 0.35);
+    transform: translateY(-4px);
+}
+
+.suggested-match-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 193, 7, 0.15);
+    border: 1px solid rgba(255, 193, 7, 0.4);
+    color: var(--bs-warning);
+    font-size: 0.7rem;
+    font-weight: 600;
+    border-radius: 20px;
+    padding: 3px 8px;
+}
+
+.suggested-game-tag {
+    display: inline-block;
+    background: rgba(13, 202, 240, 0.15);
+    border: 1px solid rgba(13, 202, 240, 0.3);
+    color: var(--bs-info);
+    font-size: 0.65rem;
+    border-radius: 20px;
+    padding: 2px 7px;
+}

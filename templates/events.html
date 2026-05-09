@@ -59,7 +59,82 @@
             </form>
         </div>
     </div>
-    
+
+    {% if user.is_authenticated and suggested_events %}
+    <div class="suggested-section">
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <i class="bi bi-stars text-warning fs-5"></i>
+            <h2 class="h5 mb-0 text-white">Suggested for You</h2>
+        </div>
+        <p class="text-muted small mb-3">Based on games you've played</p>
+
+        <div class="suggested-scroll-container">
+            {% for event in suggested_events %}
+            <div class="suggested-event-card position-relative h-100">
+
+                <span class="suggested-match-badge">
+                    ⭐ {{ event.match_count }} match{{ event.match_count|pluralize:"es" }}
+                </span>
+
+                <div class="p-3 d-flex flex-column h-100">
+                    <h6 class="text-warning fw-bold mb-2 pe-5">{{ event.name }}</h6>
+
+                    <p class="text-muted small mb-1">
+                        <i class="bi bi-calendar-date me-1"></i>{{ event.date_time|date:"d M Y, H:i" }}
+                    </p>
+                    <p class="text-muted small mb-2">
+                        <i class="bi bi-geo-alt me-1"></i>{{ event.location }}
+                    </p>
+
+                    <div class="mb-2">
+                        {% for game in event.games.all %}
+                            <span class="suggested-game-tag me-1">{{ game.title }}</span>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <i class="bi bi-people-fill me-1"></i>
+                            {{ event.current_players }} / {{ event.max_players }} players
+                        </small>
+                        <div class="progress mt-1" style="height: 15px;">
+                            {% widthratio event.current_players event.max_players 100 as pct %}
+                            <div class="progress-bar bg-info progress-bar-striped" role="progressbar"
+                                 style="width: {{ pct }}%;"
+                                 aria-valuenow="{{ event.current_players }}"
+                                 aria-valuemin="0"
+                                 aria-valuemax="{{ event.max_players }}">
+                                {% if pct > 0 %}{{ pct|floatformat:0 }}%{% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto d-flex gap-2">
+                        <a href="{% url 'events:join' event.pk %}"
+                           class="btn btn-join-event btn-sm flex-fill">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Join
+                        </a>
+                        <a href="{% url 'events:event_detail' event.pk %}"
+                           class="btn btn-event-details btn-sm flex-fill">
+                            <i class="bi bi-info-circle me-1"></i>Details
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if paginator.count > suggested_events|length %}
+        <div class="text-end mt-3">
+            <a href="{% url 'events:events_list' %}" class="link-warning text-decoration-none small fw-semibold">
+                See all events<i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
     <h2 class="mb-4 text-center text-white-75">Upcoming Events</h2>
 
     {% if events %}

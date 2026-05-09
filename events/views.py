@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -53,6 +54,56 @@ def _apply_no_show_penalties(event):
         penalised.append(reg.user)
 
     return penalised
+
+
+def get_suggested_events(user, limit=4):
+    """
+    Връща до `limit` предстоящи събития на база игрите от минали регистрации
+    (активен статус). Всяко събитие има анотация `match_count`.
+    """
+    if not user.is_authenticated:
+        return Event.objects.none()
+
+    now = timezone.now()
+
+    historical_game_ids = (
+        BoardGame.objects.filter(
+            events__date_time__lt=now,
+            events__registrations__user=user,
+            events__registrations__status__in=[
+                EventRegistration.STATUS_REGISTERED,
+                EventRegistration.STATUS_PRESENT,
+            ],
+        )
+        .values_list("pk", flat=True)
+        .distinct()
+    )
+    historical_ids_list = list(historical_game_ids)
+    if not historical_ids_list:
+        return Event.objects.none()
+
+    joined_event_ids = user.event_registrations.filter(
+        status__in=[
+            EventRegistration.STATUS_REGISTERED,
+            EventRegistration.STATUS_PRESENT,
+        ]
+    ).values_list("event_id", flat=True)
+
+    return (
+        Event.objects.filter(date_time__gte=now)
+        .exclude(pk__in=joined_event_ids)
+        .filter(games__pk__in=historical_ids_list)
+        .annotate(
+            match_count=Count(
+                "games",
+                filter=Q(games__pk__in=historical_ids_list),
+                distinct=True,
+            )
+        )
+        .distinct()
+        .order_by("-match_count", "date_time", "name")
+        .prefetch_related("games")[:limit]
+    )
 
 
 class EventListView(ListView):
@@ -117,8 +168,10 @@ class EventListView(ListView):
                 ).values_list("event_id", flat=True)
             )
             context["joined_event_pks"] = joined_pks
+            context["suggested_events"] = get_suggested_events(self.request.user)
         else:
             context["joined_event_pks"] = set()
+            context["suggested_events"] = Event.objects.none()
 
         return context
 

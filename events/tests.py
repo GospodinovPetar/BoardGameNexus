@@ -1,10 +1,11 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from events.models import Event, EventRegistration
-from events.views import _apply_no_show_penalties
+from events.views import _apply_no_show_penalties, get_suggested_events
 from games.models import BoardGame, Genre
 
 User = get_user_model()
@@ -132,6 +133,81 @@ class JoinEventViewTest(TestCase):
             response,
             f"/accounts/login/?next=/events/join/{self.event.pk}/",
         )
+
+
+class GetSuggestedEventsTest(TestCase):
+    def setUp(self):
+        self.organizer = make_user("sug_org")
+        self.user = make_user("sug_player")
+        self.genre = Genre.objects.create(name="Strategy")
+        self.game = BoardGame.objects.create(
+            title="Catan",
+            genre=self.genre,
+            min_players=2,
+            max_players=4,
+            release_date=timezone.now().date(),
+        )
+
+    def _make_past_event_with_registration(self):
+        past = make_event(organizer=self.organizer, days_ahead=-20, name="Past Meetup")
+        past.games.add(self.game)
+        EventRegistration.objects.create(
+            event=past,
+            user=self.user,
+            status=EventRegistration.STATUS_REGISTERED,
+        )
+        return past
+
+    def test_anonymous_returns_empty(self):
+        self.assertEqual(list(get_suggested_events(AnonymousUser())), [])
+
+    def test_no_past_registrations_returns_empty(self):
+        make_event(organizer=self.organizer, days_ahead=7, name="Future Only")
+        self.assertEqual(list(get_suggested_events(self.user)), [])
+
+    def test_suggests_upcoming_with_matching_game_and_match_count(self):
+        self._make_past_event_with_registration()
+        upcoming = make_event(
+            organizer=self.organizer, days_ahead=14, name="Suggested Meetup"
+        )
+        upcoming.games.add(self.game)
+
+        suggestions = list(get_suggested_events(self.user))
+        self.assertEqual(len(suggestions), 1)
+        self.assertEqual(suggestions[0].pk, upcoming.pk)
+        self.assertEqual(suggestions[0].match_count, 1)
+
+    def test_excludes_events_user_already_joined(self):
+        self._make_past_event_with_registration()
+        upcoming = make_event(
+            organizer=self.organizer, days_ahead=14, name="Already In"
+        )
+        upcoming.games.add(self.game)
+        EventRegistration.objects.create(
+            event=upcoming,
+            user=self.user,
+            status=EventRegistration.STATUS_REGISTERED,
+        )
+
+        self.assertEqual(list(get_suggested_events(self.user)), [])
+
+    def test_event_list_context_has_suggested_for_authenticated(self):
+        self._make_past_event_with_registration()
+        upcoming = make_event(
+            organizer=self.organizer, days_ahead=14, name="On List"
+        )
+        upcoming.games.add(self.game)
+
+        self.client.login(username="sug_player", password="password")
+        response = self.client.get(reverse("events:events_list"))
+        self.assertEqual(response.status_code, 200)
+        suggested = list(response.context["suggested_events"])
+        self.assertEqual(len(suggested), 1)
+        self.assertEqual(suggested[0].pk, upcoming.pk)
+
+    def test_event_list_context_empty_suggested_when_anonymous(self):
+        response = self.client.get(reverse("events:events_list"))
+        self.assertFalse(response.context["suggested_events"].exists())
 
 
 class EventDetailViewContextTest(TestCase):
