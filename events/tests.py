@@ -476,3 +476,85 @@ class PublicProfileViewTest(TestCase):
             reverse("accounts:public_profile", args=[99999])
         )
         self.assertEqual(response.status_code, 404)
+
+
+class PastEventVisibilityTest(TestCase):
+    def setUp(self):
+        self.organizer = make_user("past_org")
+        self.player = make_user("past_player")
+        self.stranger = make_user("stranger")
+        self.event = make_event(
+            organizer=self.organizer, days_ahead=-1, name="Already Gone"
+        )
+
+    def test_past_event_not_on_public_list(self):
+        future = make_event(organizer=self.organizer, days_ahead=7, name="Still Coming")
+        response = self.client.get(reverse("events:events_list"))
+        self.assertEqual(response.status_code, 200)
+        listed_ids = [e.pk for e in response.context["events"]]
+        self.assertNotIn(self.event.pk, listed_ids)
+        self.assertIn(future.pk, listed_ids)
+
+    def test_anonymous_cannot_view_past_event_detail(self):
+        response = self.client.get(reverse("events:event_detail", args=[self.event.pk]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_stranger_cannot_view_past_event_detail(self):
+        self.client.login(username="stranger", password="password")
+        response = self.client.get(reverse("events:event_detail", args=[self.event.pk]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_participant_can_view_past_event_detail(self):
+        EventRegistration.objects.create(event=self.event, user=self.player)
+        self.client.login(username="past_player", password="password")
+        response = self.client.get(reverse("events:event_detail", args=[self.event.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["is_past_event"])
+        self.assertGreaterEqual(len(response.context["fellow_participants"]), 1)
+
+    def test_no_show_can_view_past_event_detail(self):
+        EventRegistration.objects.create(
+            event=self.event,
+            user=self.player,
+            status=EventRegistration.STATUS_NO_SHOW,
+        )
+        self.client.login(username="past_player", password="password")
+        response = self.client.get(reverse("events:event_detail", args=[self.event.pk]))
+        self.assertEqual(response.status_code, 200)
+
+    def test_removed_participant_cannot_view_past_event_detail(self):
+        EventRegistration.objects.create(
+            event=self.event,
+            user=self.player,
+            status=EventRegistration.STATUS_REMOVED,
+        )
+        self.client.login(username="past_player", password="password")
+        response = self.client.get(reverse("events:event_detail", args=[self.event.pk]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_organizer_can_view_past_event_detail(self):
+        self.client.login(username="past_org", password="password")
+        response = self.client.get(reverse("events:event_detail", args=[self.event.pk]))
+        self.assertEqual(response.status_code, 200)
+
+    def test_join_past_event_redirects_to_list(self):
+        self.client.login(username="stranger", password="password")
+        response = self.client.post(reverse("events:join", args=[self.event.pk]))
+        self.assertRedirects(response, reverse("events:events_list"))
+
+    def test_participant_sees_event_in_profile_history(self):
+        EventRegistration.objects.create(event=self.event, user=self.player)
+        self.client.login(username="past_player", password="password")
+        response = self.client.get(reverse("accounts:profile"))
+        self.assertEqual(response.status_code, 200)
+        past = list(response.context["past_events"])
+        self.assertEqual(len(past), 1)
+        self.assertEqual(past[0].pk, self.event.pk)
+
+    def test_organizer_sees_past_event_in_profile_history(self):
+        self.client.login(username="past_org", password="password")
+        response = self.client.get(reverse("accounts:profile"))
+        self.assertEqual(response.status_code, 200)
+        past = list(response.context["past_events"])
+        self.assertEqual(len(past), 1)
+        self.assertEqual(past[0].pk, self.event.pk)

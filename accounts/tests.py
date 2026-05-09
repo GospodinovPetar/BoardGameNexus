@@ -2,8 +2,12 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from accounts.forms import RegisterForm
+from events.models import Event, EventRegistration
+from games.models import BoardGame, Genre
+from reviews.models import GameReview
 
 User = get_user_model()
 
@@ -75,3 +79,70 @@ class AccountsTests(TestCase):
         response = self.client.get(reverse("accounts:profile"))
 
         self.assertEqual(response.status_code, 302)
+
+
+class PublicProfilePlayedGamesOnlyTest(TestCase):
+    def test_foreign_profile_shows_only_played_games_summary(self):
+        group = Group.objects.get_or_create(name="Members")[0]
+        target = User.objects.create_user(
+            username="gamer",
+            email="gamer@test.com",
+            password="StrongPass12345!",
+        )
+        target.groups.add(group)
+        viewer = User.objects.create_user(
+            username="viewerx",
+            email="viewerx@test.com",
+            password="StrongPass12345!",
+        )
+        viewer.groups.add(group)
+        genre = Genre.objects.create(name="Strategy")
+        game = BoardGame.objects.create(
+            title="Azul",
+            genre=genre,
+            min_players=2,
+            max_players=4,
+            release_date=timezone.now().date(),
+        )
+        organizer = User.objects.create_user(
+            username="orgx",
+            email="orgx@test.com",
+            password="StrongPass12345!",
+        )
+        organizer.groups.add(group)
+        past = Event.objects.create(
+            name="Night session",
+            description="Test",
+            date_time=timezone.now() - timezone.timedelta(days=1),
+            location="Cafe",
+            organizer_name="Org",
+            organizer=organizer,
+            current_players=2,
+            max_players=4,
+        )
+        past.games.add(game)
+        EventRegistration.objects.create(event=past, user=target)
+        EventRegistration.objects.create(
+            event=past,
+            user=viewer,
+            status=EventRegistration.STATUS_PRESENT,
+        )
+        GameReview.objects.create(
+            author=target,
+            game=game,
+            title="Great",
+            rating=5,
+            content="Nice game.",
+        )
+
+        self.client.login(username="viewerx", password="StrongPass12345!")
+        response = self.client.get(
+            reverse("accounts:public_profile", args=[target.pk])
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["is_foreign_profile"])
+        sessions = list(response.context["played_sessions"])
+        self.assertEqual(len(sessions), 1)
+        self.assertEqual(sessions[0].player_count, 2)
+        self.assertEqual(list(response.context["reviews"]), [])
+        self.assertEqual(list(response.context["collections"]), [])

@@ -70,6 +70,38 @@
                 {{ event.description|default:"No description available for this event." }}
             </p>
 
+            {% if is_past_event and not is_organizer and fellow_participants %}
+            <div class="mt-4 p-3 rounded border border-secondary bg-dark bg-opacity-25">
+                <h5 class="event-description-heading text-start mb-3">
+                    <i class="bi bi-people-fill me-2 text-info"></i>Players at this event
+                </h5>
+                <ul class="list-group list-group-flush">
+                    {% for reg in fellow_participants %}
+                    <li class="list-group-item bg-transparent border-secondary d-flex align-items-center gap-2 py-2">
+                        {% if reg.user.avatar %}
+                        <img src="{{ reg.user.avatar.url }}" alt="" class="rounded-circle" style="width:40px;height:40px;object-fit:cover;">
+                        {% else %}
+                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width:40px;height:40px;min-width:40px;">
+                            <i class="bi bi-person-fill text-light"></i>
+                        </div>
+                        {% endif %}
+                        <div class="flex-grow-1 min-w-0">
+                            <a href="{% url 'accounts:public_profile' reg.user.pk %}" class="fw-semibold text-decoration-none">{{ reg.user.username }}</a>
+                            {% if reg.user.get_full_name %}
+                            <span class="text-muted small ms-1">({{ reg.user.get_full_name }})</span>
+                            {% endif %}
+                            {% if reg.status == STATUS_NO_SHOW %}
+                            <span class="badge bg-danger ms-2">No show</span>
+                            {% elif reg.status == STATUS_PRESENT %}
+                            <span class="badge bg-success ms-2">Present</span>
+                            {% endif %}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
             {% if event.games.all %}
             <h5 class="event-description-heading text-start mt-4">
                 <i class="bi bi-dice-5 me-2 text-info"></i>Games to be played:

@@ -39,41 +39,117 @@
             </div>
         </div>
 
-        <div class="card bg-secondary-subtle border-secondary mb-4">
-            <div class="card-header">My reviews</div>
-            <ul class="list-group list-group-flush">
-                {% for review in reviews %}
-                    <li class="list-group-item bg-transparent">
-                        <div class="d-flex gap-3 align-items-start">
-                            {% include "reviews/_review_author_avatar.html" with user_obj=review.author size=40 %}
-                            <div class="flex-grow-1 min-w-0">
-                                <a href="{{ review.get_absolute_url }}" class="fw-semibold text-decoration-none">{{ review.title }}</a>
-                                <span class="badge bg-warning text-dark ms-1">{{ review.rating }}/5</span>
-                                <p class="small text-muted mb-0">
-                                    <a href="{% url 'games:game_details' review.game.pk %}">{{ review.game.title }}</a>
-                                </p>
-                            </div>
-                        </div>
-                    </li>
-                {% empty %}
-                    <li class="list-group-item bg-transparent text-muted">No reviews yet.</li>
-                {% endfor %}
-            </ul>
-        </div>
-
+        {% if is_foreign_profile %}
         <div class="card bg-secondary-subtle border-secondary">
-            <div class="card-header">Game collections</div>
-            <ul class="list-group list-group-flush">
-                {% for collection in collections %}
-                    <li class="list-group-item bg-transparent">
-                        <a href="{% url 'games:game_details' collection.game.pk %}" class="text-decoration-none">{{ collection.game.title }}</a>
-                        <span class="text-muted small ms-2">({{ collection.get_status_display }})</span>
+            <div class="card-header fw-semibold">
+                <i class="bi bi-dice-5 me-2 text-info"></i> Board games played
+            </div>
+            <div class="card-body">
+                {% if played_sessions %}
+                <ul class="list-group list-group-flush">
+                    {% for session in played_sessions %}
+                    <li class="list-group-item bg-transparent px-0 border-secondary">
+                        <div class="d-flex flex-wrap align-items-baseline gap-2 mb-1">
+                            {% for g in session.games.all %}
+                            <a href="{% url 'games:game_details' g.pk %}" class="fw-semibold text-decoration-none">{{ g.title }}</a>{% if not forloop.last %}<span class="text-muted">·</span>{% endif %}
+                            {% empty %}
+                            <span class="text-muted">No games linked</span>
+                            {% endfor %}
+                        </div>
+                        <p class="small text-muted mb-0">
+                            <i class="bi bi-calendar-event me-1"></i>{{ session.date_time|date:"d M Y H:i" }}
+                            <span class="mx-2">·</span>
+                            <i class="bi bi-people me-1"></i>{{ session.player_count }} {% if session.player_count == 1 %}player{% else %}players{% endif %}
+                        </p>
                     </li>
-                {% empty %}
-                    <li class="list-group-item bg-transparent text-muted">No collections yet.</li>
-                {% endfor %}
-            </ul>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted mb-0">No completed games yet.</p>
+                {% endif %}
+            </div>
         </div>
+        {% else %}
+        <div class="card bg-secondary-subtle border-secondary">
+            <div class="card-header border-0 bg-transparent px-3 pt-3 pb-0">
+                <ul class="nav nav-tabs card-header-tabs flex-wrap gap-1" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="reviews-tab-btn" data-bs-toggle="tab" data-bs-target="#reviews-tab-pane" type="button" role="tab" aria-controls="reviews-tab-pane" aria-selected="true">Reviews</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="collections-tab-btn" data-bs-toggle="tab" data-bs-target="#collections-tab-pane" type="button" role="tab" aria-controls="collections-tab-pane" aria-selected="false">Collections</button>
+                    </li>
+                    {% if user.is_authenticated and user.pk == profile_user.pk %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="history-tab-btn" data-bs-toggle="tab" data-bs-target="#history-tab-pane" type="button" role="tab" aria-controls="history-tab-pane" aria-selected="false">
+                            <i class="bi bi-clock-history me-1"></i> History
+                        </button>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="card-body tab-content">
+                <div class="tab-pane fade show active" id="reviews-tab-pane" role="tabpanel" aria-labelledby="reviews-tab-btn" tabindex="0">
+                    <ul class="list-group list-group-flush">
+                        {% for review in reviews %}
+                            <li class="list-group-item bg-transparent px-0">
+                                <div class="d-flex gap-3 align-items-start">
+                                    {% include "reviews/_review_author_avatar.html" with user_obj=review.author size=40 %}
+                                    <div class="flex-grow-1 min-w-0">
+                                        <a href="{{ review.get_absolute_url }}" class="fw-semibold text-decoration-none">{{ review.title }}</a>
+                                        <span class="badge bg-warning text-dark ms-1">{{ review.rating }}/5</span>
+                                        <p class="small text-muted mb-0">
+                                            <a href="{% url 'games:game_details' review.game.pk %}">{{ review.game.title }}</a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                        {% empty %}
+                            <p class="text-muted mb-0">No reviews yet.</p>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="tab-pane fade" id="collections-tab-pane" role="tabpanel" aria-labelledby="collections-tab-btn" tabindex="0">
+                    <ul class="list-group list-group-flush">
+                        {% for collection in collections %}
+                            <li class="list-group-item bg-transparent px-0">
+                                <a href="{% url 'games:game_details' collection.game.pk %}" class="text-decoration-none">{{ collection.game.title }}</a>
+                                <span class="text-muted small ms-2">({{ collection.get_status_display }})</span>
+                            </li>
+                        {% empty %}
+                            <p class="text-muted mb-0">No collections yet.</p>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% if user.is_authenticated and user.pk == profile_user.pk %}
+                <div class="tab-pane fade" id="history-tab-pane" role="tabpanel" aria-labelledby="history-tab-btn" tabindex="0">
+                    <p class="small text-muted mb-3">Past events you joined or organized. Open one to see the venue, date and time, and who played.</p>
+                    <ul class="list-group list-group-flush">
+                        {% for ev in past_events %}
+                            <li class="list-group-item bg-transparent px-0 border-secondary">
+                                <a href="{% url 'events:event_detail' ev.pk %}" class="fw-semibold text-decoration-none">{{ ev.name }}</a>
+                                <p class="small text-muted mb-1">
+                                    <i class="bi bi-calendar-event me-1"></i>{{ ev.date_time|date:"d M Y H:i" }}
+                                    <span class="mx-2">·</span>
+                                    <i class="bi bi-geo-alt me-1"></i>{{ ev.location }}
+                                </p>
+                                {% if ev.games.all %}
+                                <p class="small mb-0 text-secondary">
+                                    {% for g in ev.games.all %}
+                                        <span class="me-2">{{ g.title }}{% if not forloop.last %},{% endif %}</span>
+                                    {% endfor %}
+                                </p>
+                                {% endif %}
+                            </li>
+                        {% empty %}
+                            <p class="text-muted mb-0">No past events yet.</p>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

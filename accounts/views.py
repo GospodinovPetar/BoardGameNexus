@@ -2,12 +2,39 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
 from django.contrib.auth.views import LoginView, LogoutView
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views import View
 from django.views.generic import CreateView, TemplateView
 
+from events.models import Event
+from events.visibility import PARTICIPANT_HISTORY_STATUSES
 from reviews.models import GameReview, UserCollection
+
+
+def _past_participated_events_with_player_count(user):
+    """Events that have ended where `user` was a participant (not removed)."""
+    now = timezone.now()
+    return (
+        Event.objects.filter(
+            date_time__lte=now,
+            registrations__user=user,
+            registrations__status__in=PARTICIPANT_HISTORY_STATUSES,
+        )
+        .distinct()
+        .annotate(
+            player_count=Count(
+                "registrations",
+                filter=Q(
+                    registrations__status__in=PARTICIPANT_HISTORY_STATUSES,
+                ),
+            )
+        )
+        .order_by("-date_time")
+        .prefetch_related("games")
+    )
 
 from .forms import EditProfileForm, EditUserProfileForm, LoginForm, RegisterForm
 from .models import CustomUser
@@ -58,10 +85,29 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             .select_related("game")
             .order_by("-added_at")
         )
+        now = timezone.now()
+        past_events = (
+            Event.objects.filter(
+                Q(date_time__lte=now)
+                & (
+                    Q(organizer=user)
+                    | Q(
+                        registrations__user=user,
+                        registrations__status__in=PARTICIPANT_HISTORY_STATUSES,
+                    )
+                )
+            )
+            .distinct()
+            .order_by("-date_time")
+            .prefetch_related("games")
+        )
         context["profile_user"] = user
         context["user_profile"] = user.profile
         context["reviews"] = reviews
         context["collections"] = collections
+        context["past_events"] = past_events
+        context["is_foreign_profile"] = False
+        context["played_sessions"] = []
         return context
 
 
@@ -73,20 +119,50 @@ class PublicProfileView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         profile_user = get_object_or_404(CustomUser, pk=self.kwargs["pk"])
-        reviews = (
-            GameReview.objects.filter(author=profile_user)
-            .select_related("game")
-            .order_by("-created_at")
-        )
-        collections = (
-            UserCollection.objects.filter(user=profile_user)
-            .select_related("game")
-            .order_by("-added_at")
-        )
+        viewer = self.request.user
+        is_foreign = viewer.pk != profile_user.pk
+
+        if is_foreign:
+            reviews = GameReview.objects.none()
+            collections = UserCollection.objects.none()
+            past_events = Event.objects.none()
+            played_sessions = list(_past_participated_events_with_player_count(profile_user))
+        else:
+            reviews = (
+                GameReview.objects.filter(author=profile_user)
+                .select_related("game")
+                .order_by("-created_at")
+            )
+            collections = (
+                UserCollection.objects.filter(user=profile_user)
+                .select_related("game")
+                .order_by("-added_at")
+            )
+            now = timezone.now()
+            past_events = (
+                Event.objects.filter(
+                    Q(date_time__lte=now)
+                    & (
+                        Q(organizer=profile_user)
+                        | Q(
+                            registrations__user=profile_user,
+                            registrations__status__in=PARTICIPANT_HISTORY_STATUSES,
+                        )
+                    )
+                )
+                .distinct()
+                .order_by("-date_time")
+                .prefetch_related("games")
+            )
+            played_sessions = []
+
         context["profile_user"] = profile_user
         context["user_profile"] = getattr(profile_user, "profile", None)
         context["reviews"] = reviews
         context["collections"] = collections
+        context["past_events"] = past_events
+        context["is_foreign_profile"] = is_foreign
+        context["played_sessions"] = played_sessions
         return context
 
 

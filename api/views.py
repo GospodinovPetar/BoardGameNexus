@@ -1,10 +1,13 @@
 from django.db.models import Avg, FloatField, Value
 from django.db.models.functions import Coalesce
+from django.utils import timezone
 from rest_framework import generics, serializers
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 
 from accounts.models import CustomUser
 from events.models import Event
+from events.visibility import can_view_event
 from games.models import BoardGame, Genre
 from reviews.models import GameReview, UserCollection
 
@@ -71,7 +74,9 @@ class EventListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsModeratorOrReadOnly]
 
     def get_queryset(self):
-        queryset = Event.objects.prefetch_related("games").all()
+        queryset = Event.objects.prefetch_related("games").filter(
+            date_time__gt=timezone.now()
+        )
         location = self.request.query_params.get("location")
         if location:
             queryset = queryset.filter(location__icontains=location)
@@ -82,6 +87,13 @@ class EventDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Event.objects.prefetch_related("games").all()
     serializer_class = EventSerializer
     permission_classes = [IsModeratorOrReadOnly]
+
+    def get_object(self):
+        obj = super().get_object()
+        if self.request.method in ("GET", "HEAD", "OPTIONS"):
+            if not can_view_event(self.request.user, obj):
+                raise NotFound()
+        return obj
 
 
 class GameReviewListCreateView(generics.ListCreateAPIView):

@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Count, Q
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -15,6 +16,12 @@ from django.views.generic import (
 
 from events.forms import EventForm, EventSearchForm
 from events.models import Event, EventRegistration
+from events.visibility import (
+    PARTICIPANT_HISTORY_STATUSES,
+    can_view_event,
+    event_has_started,
+    is_organizer_or_moderator,
+)
 from events.tasks import (
     send_event_cancelled_email,
     send_event_join_email,
@@ -22,14 +29,6 @@ from events.tasks import (
     send_removed_from_event_email,
 )
 from games.models import BoardGame
-
-
-def _is_organizer_or_mod(user, event):
-    if not user.is_authenticated:
-        return False
-    if user.is_superuser or user.groups.filter(name="Moderators").exists():
-        return True
-    return event.organizer is not None and event.organizer == user
 
 
 def _apply_no_show_penalties(event):
@@ -90,7 +89,7 @@ def get_suggested_events(user, limit=4):
     ).values_list("event_id", flat=True)
 
     return (
-        Event.objects.filter(date_time__gte=now)
+        Event.objects.filter(date_time__gt=now)
         .exclude(pk__in=joined_event_ids)
         .filter(games__pk__in=historical_ids_list)
         .annotate(
@@ -113,7 +112,8 @@ class EventListView(ListView):
     paginate_by = 6
 
     def get_queryset(self):
-        events_list = Event.objects.all()
+        now = timezone.now()
+        events_list = Event.objects.filter(date_time__gt=now)
         form = EventSearchForm(self.request.GET)
 
         if form.is_valid():
@@ -181,6 +181,12 @@ class EventDetailView(DetailView):
     template_name = "event_detail.html"
     context_object_name = "event"
 
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+        if not can_view_event(self.request.user, obj):
+            raise Http404()
+        return obj
+
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         penalised = _apply_no_show_penalties(self.object)
@@ -200,7 +206,7 @@ class EventDetailView(DetailView):
         event = self.object
         user = self.request.user
 
-        is_organizer = _is_organizer_or_mod(user, event)
+        is_organizer = is_organizer_or_moderator(user, event)
         can_edit_event = is_organizer
 
         user_registration = None
@@ -213,6 +219,15 @@ class EventDetailView(DetailView):
             .order_by("joined_at")
         )
 
+        started = event_has_started(event)
+        fellow_participants = []
+        if started:
+            fellow_participants = list(
+                event.registrations.filter(status__in=PARTICIPANT_HISTORY_STATUSES)
+                .select_related("user", "user__profile")
+                .order_by("joined_at")
+            )
+
         context.update(
             {
                 "is_organizer": is_organizer,
@@ -222,6 +237,8 @@ class EventDetailView(DetailView):
                 "attendance_window_open": event.attendance_window_open(),
                 "attendance_window_closed": event.attendance_window_closed(),
                 "is_before_event": timezone.now() < event.date_time,
+                "is_past_event": started,
+                "fellow_participants": fellow_participants,
                 "STATUS_REGISTERED": EventRegistration.STATUS_REGISTERED,
                 "STATUS_PRESENT": EventRegistration.STATUS_PRESENT,
                 "STATUS_NO_SHOW": EventRegistration.STATUS_NO_SHOW,
@@ -234,6 +251,13 @@ class JoinEventView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         pk = kwargs["pk"]
         event = get_object_or_404(Event, pk=pk)
+
+        if event_has_started(event):
+            messages.error(
+                request,
+                "This event has already started; registration is closed.",
+            )
+            return redirect("events:events_list")
 
         existing = EventRegistration.objects.filter(
             event=event, user=request.user
@@ -292,7 +316,7 @@ class RemoveParticipantView(LoginRequiredMixin, View):
     def post(self, request, event_pk, reg_pk):
         event = get_object_or_404(Event, pk=event_pk)
 
-        if not _is_organizer_or_mod(request.user, event):
+        if not is_organizer_or_moderator(request.user, event):
             messages.error(request, "You are not authorised to remove participants.")
             return redirect("events:event_detail", pk=event_pk)
 
@@ -340,7 +364,7 @@ class MarkPresentView(LoginRequiredMixin, View):
     def post(self, request, event_pk, reg_pk):
         event = get_object_or_404(Event, pk=event_pk)
 
-        if not _is_organizer_or_mod(request.user, event):
+        if not is_organizer_or_moderator(request.user, event):
             messages.error(request, "You are not authorised to mark attendance.")
             return redirect("events:event_detail", pk=event_pk)
 
@@ -405,7 +429,7 @@ class EventUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def test_func(self):
         event = self.get_object()
-        return _is_organizer_or_mod(self.request.user, event)
+        return is_organizer_or_moderator(self.request.user, event)
 
     def get_success_url(self):
         return reverse("events:event_detail", kwargs={"pk": self.object.pk})
@@ -442,7 +466,7 @@ class EventDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         event = self.get_object()
-        return _is_organizer_or_mod(self.request.user, event)
+        return is_organizer_or_moderator(self.request.user, event)
 
     def delete(self, request, *args, **kwargs):
         event = self.get_object()
