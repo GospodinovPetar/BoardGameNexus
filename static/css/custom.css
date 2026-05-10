@@ -178,6 +178,12 @@ body {
     background-color: var(--bs-body-bg);
     color: var(--bs-body-color);
 }
+
+.app-brand-logo {
+    height: 48px;
+    width: auto;
+    object-fit: contain;
+}
 .mission-card {
     background-color: var(--bs-tertiary-bg);
     border: 2px solid var(--bs-primary);
