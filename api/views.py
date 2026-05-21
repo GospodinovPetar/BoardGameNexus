@@ -74,8 +74,10 @@ class EventListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsModeratorOrReadOnly]
 
     def get_queryset(self):
-        queryset = Event.objects.prefetch_related("games").filter(
-            date_time__gt=timezone.now()
+        from events.visibility import filter_public_events
+
+        queryset = filter_public_events(
+            Event.objects.prefetch_related("games").all()
         )
         location = self.request.query_params.get("location")
         if location:

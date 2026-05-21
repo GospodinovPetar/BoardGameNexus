@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -5,6 +7,7 @@ from django.utils import timezone
 
 from events.validators import validate_future_date
 from games.models import BoardGame
+from venues.utils import build_google_maps_url
 
 
 class Event(models.Model):
@@ -16,9 +19,18 @@ class Event(models.Model):
     date_time = models.DateTimeField(
         validators=[validate_future_date],
     )
+    end_time = models.DateTimeField()
 
     location = models.CharField(
         max_length=200,
+    )
+
+    venue = models.ForeignKey(
+        "venues.Venue",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="events",
     )
 
     organizer_name = models.CharField(
@@ -40,7 +52,7 @@ class Event(models.Model):
     max_players = models.PositiveIntegerField(
         default=4,
         validators=[MinValueValidator(2)],
-        verbose_name="Maximum Players",
+        verbose_name="Expected players",
     )
 
     games = models.ManyToManyField(
@@ -50,6 +62,47 @@ class Event(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def display_location(self):
+        if self.venue_id:
+            return self.venue.display_location()
+        return self.location
+
+    @property
+    def maps_address(self):
+        if self.venue_id:
+            return self.venue.full_address
+        return self.location
+
+    @property
+    def google_maps_url(self):
+        return build_google_maps_url(self.maps_address)
+
+    @property
+    def duration_hours(self):
+        if not self.end_time or not self.date_time:
+            return Decimal("0")
+        delta = self.end_time - self.date_time
+        hours = Decimal(str(delta.total_seconds())) / Decimal("3600")
+        return max(hours, Decimal("0"))
+
+    def confirmed_participant_count(self):
+        return self.active_registration_count()
+
+    @property
+    def venue_total_price(self):
+        if not self.venue_id or not self.venue.hourly_rate:
+            return None
+        return (self.venue.hourly_rate * self.duration_hours).quantize(Decimal("0.01"))
+
+    @property
+    def venue_price_per_person(self):
+        total = self.venue_total_price
+        if total is None:
+            return None
+        count = max(self.confirmed_participant_count(), 1)
+        return (total / Decimal(count)).quantize(Decimal("0.01"))
 
     def has_free_spots(self):
         return self.current_players < self.max_players

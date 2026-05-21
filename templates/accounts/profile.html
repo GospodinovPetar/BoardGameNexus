@@ -22,7 +22,10 @@
                     <p class="small"><i class="bi bi-controller"></i> Games played: {{ user_profile.games_played }}</p>
                 {% endif %}
                 {% if user.is_authenticated and user.pk == profile_user.pk %}
-                    <a href="{% url 'accounts:edit_profile' %}" class="btn btn-primary mt-2">Edit profile</a>
+                    <div class="d-grid gap-2 mt-2">
+                        <a href="{% url 'accounts:edit_profile' %}" class="btn btn-primary">Edit profile</a>
+                        <a href="{% url 'accounts:password_change' %}" class="btn btn-outline-secondary btn-sm">Change password</a>
+                    </div>
                 {% endif %}
             </div>
         </div>
@@ -81,6 +84,16 @@
                     </li>
                     {% if user.is_authenticated and user.pk == profile_user.pk %}
                     <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="my-events-tab-btn" data-bs-toggle="tab" data-bs-target="#my-events-tab-pane" type="button" role="tab" aria-controls="my-events-tab-pane" aria-selected="false">
+                            <i class="bi bi-calendar-event me-1"></i> My Events
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="reservations-tab-btn" data-bs-toggle="tab" data-bs-target="#reservations-tab-pane" type="button" role="tab" aria-controls="reservations-tab-pane" aria-selected="false">
+                            <i class="bi bi-shop me-1"></i> Reservations
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
                         <button class="nav-link" id="history-tab-btn" data-bs-toggle="tab" data-bs-target="#history-tab-pane" type="button" role="tab" aria-controls="history-tab-pane" aria-selected="false">
                             <i class="bi bi-clock-history me-1"></i> History
                         </button>
@@ -122,6 +135,98 @@
                     </ul>
                 </div>
                 {% if user.is_authenticated and user.pk == profile_user.pk %}
+                <div class="tab-pane fade" id="my-events-tab-pane" role="tabpanel" aria-labelledby="my-events-tab-btn" tabindex="0">
+                    <h6 class="text-info mb-3">Events I organize</h6>
+                    <ul class="list-group list-group-flush mb-4">
+                        {% for ev in upcoming_organized_events %}
+                        <li class="list-group-item bg-transparent px-0 border-secondary">
+                            <a href="{% url 'events:event_detail' ev.pk %}" class="fw-semibold text-decoration-none">{{ ev.name }}</a>
+                            <p class="small text-muted mb-1">
+                                <i class="bi bi-calendar-event me-1"></i>{{ ev.date_time|date:"d M Y H:i" }} – {{ ev.end_time|date:"H:i" }}
+                                {% if ev.venue %}
+                                <span class="mx-2">·</span><i class="bi bi-shop me-1"></i>{{ ev.venue.name }}
+                                {% endif %}
+                            </p>
+                            {% if ev.venue and ev.venue_total_price %}
+                            <p class="small mb-0 text-secondary">
+                                Venue cost: {{ ev.venue_total_price }} BGN total
+                                ({{ ev.venue_price_per_person }} BGN / person)
+                            </p>
+                            {% endif %}
+                        </li>
+                        {% empty %}
+                        <p class="text-muted">No upcoming events you organize.</p>
+                        {% endfor %}
+                    </ul>
+
+                    <h6 class="text-info mb-3">Events I joined</h6>
+                    <p class="small text-muted mb-2">Includes cancelled events you were registered for — they are hidden elsewhere on the site.</p>
+                    <ul class="list-group list-group-flush">
+                        {% for ev in upcoming_joined_events %}
+                        <li class="list-group-item bg-transparent px-0 border-secondary">
+                            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-1">
+                                <a href="{% url 'events:event_detail' ev.pk %}" class="fw-semibold text-decoration-none">{{ ev.name }}</a>
+                                {% if ev.venue_reservation and ev.venue_reservation.status == STATUS_CANCELLED %}
+                                <span class="badge bg-secondary">Cancelled</span>
+                                {% endif %}
+                            </div>
+                            <p class="small text-muted mb-1">
+                                <i class="bi bi-calendar-event me-1"></i>{{ ev.date_time|date:"d M Y H:i" }} – {{ ev.end_time|date:"H:i" }}
+                                <span class="mx-2">·</span><i class="bi bi-person me-1"></i>{{ ev.organizer_name }}
+                            </p>
+                            {% if ev.venue and ev.venue_price_per_person %}
+                            <p class="small mb-0 text-secondary">Estimated share: {{ ev.venue_price_per_person }} BGN</p>
+                            {% endif %}
+                        </li>
+                        {% empty %}
+                        <p class="text-muted mb-0">No upcoming joined events.</p>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="tab-pane fade" id="reservations-tab-pane" role="tabpanel" aria-labelledby="reservations-tab-btn" tabindex="0">
+                    <p class="small text-muted mb-3">Partner venue bookings for events you organized. Bookings are confirmed immediately when you create the event.</p>
+                    <ul class="list-group list-group-flush">
+                        {% for reservation in venue_reservations %}
+                        <li class="list-group-item bg-transparent px-0 border-secondary">
+                            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-1">
+                                <a href="{% url 'events:event_detail' reservation.event.pk %}" class="fw-semibold text-decoration-none">{{ reservation.event.name }}</a>
+                                {% if reservation.status == STATUS_CONFIRMED %}
+                                <span class="badge bg-success">Confirmed</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Cancelled</span>
+                                {% endif %}
+                            </div>
+                            <p class="small text-muted mb-1">
+                                <i class="bi bi-shop me-1"></i>
+                                <a href="{% url 'venues:venue_detail' reservation.venue.slug %}" class="text-decoration-none">{{ reservation.venue.name }}</a>
+                                <span class="mx-2">·</span>
+                                <i class="bi bi-calendar-event me-1"></i>{{ reservation.event.date_time|date:"d M Y H:i" }} – {{ reservation.event.end_time|date:"H:i" }}
+                                <span class="mx-2">·</span>
+                                <i class="bi bi-people me-1"></i>{{ reservation.party_size }} guests
+                            </p>
+                            {% if reservation.event.venue_total_price %}
+                            <p class="small text-secondary mb-1">
+                                Venue cost: {{ reservation.event.venue_total_price }} BGN
+                                ({{ reservation.event.venue_price_per_person }} BGN / person)
+                            </p>
+                            {% endif %}
+                            {% if reservation.staff_note %}
+                            <p class="small mb-2 text-secondary">{{ reservation.staff_note }}</p>
+                            {% endif %}
+                            {% if reservation.status == STATUS_CONFIRMED and reservation.event.date_time > now %}
+                            <form method="post" action="{% url 'venues:cancel_reservation' reservation.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Cancel booking</button>
+                            </form>
+                            {% elif reservation.status == STATUS_CANCELLED and reservation.cancelled_at %}
+                            <p class="small text-muted mb-0">Cancelled {{ reservation.cancelled_at|date:"d M Y H:i" }}</p>
+                            {% endif %}
+                        </li>
+                        {% empty %}
+                        <p class="text-muted mb-0">No venue reservations yet.</p>
+                        {% endfor %}
+                    </ul>
+                </div>
                 <div class="tab-pane fade" id="history-tab-pane" role="tabpanel" aria-labelledby="history-tab-btn" tabindex="0">
                     <p class="small text-muted mb-3">Past events you joined or organized. Open one to see the venue, date and time, and who played.</p>
                     <ul class="list-group list-group-flush">
@@ -131,7 +236,12 @@
                                 <p class="small text-muted mb-1">
                                     <i class="bi bi-calendar-event me-1"></i>{{ ev.date_time|date:"d M Y H:i" }}
                                     <span class="mx-2">·</span>
-                                    <i class="bi bi-geo-alt me-1"></i>{{ ev.location }}
+                                    <i class="bi bi-geo-alt me-1"></i>
+                                    {% if ev.venue %}
+                                        <a href="{% url 'venues:venue_detail' ev.venue.slug %}" class="text-decoration-none">{{ ev.display_location }}</a>
+                                    {% else %}
+                                        {{ ev.display_location }}
+                                    {% endif %}
                                 </p>
                                 {% if ev.games.all %}
                                 <p class="small mb-0 text-secondary">

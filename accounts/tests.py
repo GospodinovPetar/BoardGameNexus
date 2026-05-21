@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.core import mail
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -81,6 +82,33 @@ class AccountsTests(TestCase):
         self.assertEqual(response.status_code, 302)
 
 
+class PasswordResetAndChangeTests(TestCase):
+    def setUp(self):
+        Group.objects.get_or_create(name="Members")
+        self.user = User.objects.create_user(
+            username="pwflow",
+            email="pwflow@test.com",
+            password="StrongPass12345!",
+        )
+
+    def test_password_reset_posts_email_when_user_exists(self):
+        mail.outbox.clear()
+        response = self.client.post(
+            reverse("accounts:password_reset"),
+            {"email": self.user.email},
+        )
+        self.assertRedirects(response, reverse("accounts:password_reset_done"))
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to[0], self.user.email)
+
+    def test_password_change_redirects_anonymous_to_login(self):
+        response = self.client.get(reverse("accounts:password_change"))
+        self.assertRedirects(
+            response,
+            "/accounts/login/?next=/accounts/password-change/",
+        )
+
+
 class PublicProfilePlayedGamesOnlyTest(TestCase):
     def test_foreign_profile_shows_only_played_games_summary(self):
         group = Group.objects.get_or_create(name="Members")[0]
@@ -114,6 +142,7 @@ class PublicProfilePlayedGamesOnlyTest(TestCase):
             name="Night session",
             description="Test",
             date_time=timezone.now() - timezone.timedelta(days=1),
+            end_time=timezone.now() - timezone.timedelta(days=1, hours=-2),
             location="Cafe",
             organizer_name="Org",
             organizer=organizer,

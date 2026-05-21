@@ -35,7 +35,7 @@
             <p class="lead mb-0 text-dark">
                 <i class="bi bi-calendar-event me-2"></i> {{ event.date_time|date:"d M Y" }}
                 <span class="mx-2">|</span>
-                <i class="bi bi-clock me-2"></i> {{ event.date_time|date:"H:i" }}
+                <i class="bi bi-clock me-2"></i> {{ event.date_time|date:"H:i" }} – {{ event.end_time|date:"H:i" }}
             </p>
         </div>
 
@@ -45,8 +45,29 @@
                     <i class="bi bi-person-fill"></i> <strong>Organizer:</strong> {{ event.organizer_name }}
                 </li>
                 <li class="list-group-item">
-                    <i class="bi bi-geo-alt-fill"></i> <strong>Location:</strong> {{ event.location }}
+                    <i class="bi bi-geo-alt-fill"></i> <strong>Location:</strong>
+                    {% if event.venue %}
+                        <a href="{% url 'venues:venue_detail' event.venue.slug %}" class="text-decoration-none">{{ event.display_location }}</a>
+                    {% else %}
+                        {{ event.display_location }}
+                    {% endif %}
+                    {% if event.google_maps_url %}
+                    <div class="mt-2">
+                        <a href="{{ event.google_maps_url }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-info">
+                            <i class="bi bi-map me-1"></i>Open in Google Maps
+                        </a>
+                    </div>
+                    {% endif %}
                 </li>
+                {% if event.venue and event.venue_total_price %}
+                <li class="list-group-item">
+                    <i class="bi bi-cash-coin"></i> <strong>Venue cost:</strong>
+                    {{ event.venue_total_price }} BGN total
+                    {% if event.venue_price_per_person %}
+                    <span class="text-muted">({{ event.venue_price_per_person }} BGN per confirmed participant)</span>
+                    {% endif %}
+                </li>
+                {% endif %}
                 <li class="list-group-item d-flex align-items-center">
                     <i class="bi bi-people-fill"></i> <strong>Players:</strong>
                     <div class="flex-grow-1 ms-3">
@@ -65,10 +86,43 @@
                 </li>
             </ul>
 
+            {% if event_is_cancelled %}
+            <div class="alert alert-secondary mb-4" role="alert">
+                <i class="bi bi-calendar-x me-2"></i>
+                <strong>This event has been cancelled.</strong>
+                It no longer appears in public listings. You can view it here because you are registered or manage the booking.
+                {% if venue_reservation.staff_note %}
+                <div class="small mt-2">{{ venue_reservation.staff_note }}</div>
+                {% endif %}
+            </div>
+            {% endif %}
+
             <h5 class="event-description-heading text-start">Event Description:</h5>
             <p class="event-description-text text-start">
                 {{ event.description|default:"No description available for this event." }}
             </p>
+
+            {% if venue_reservation %}
+            <div class="alert {% if venue_reservation.status == 'confirmed' %}alert-success{% else %}alert-secondary{% endif %} d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4" role="alert">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-shop fs-5"></i>
+                    <div>
+                        <strong>Venue booking:</strong> {{ venue_reservation.get_status_display }}
+                        ({{ venue_reservation.tables_reserved }} table)
+                        at <a href="{% url 'venues:venue_detail' venue_reservation.venue.slug %}" class="alert-link">{{ venue_reservation.venue.name }}</a>.
+                        {% if venue_reservation.staff_note %}
+                        <div class="small mt-1">{{ venue_reservation.staff_note }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if can_cancel_venue_reservation %}
+                <form method="post" action="{% url 'venues:cancel_reservation' venue_reservation.pk %}" class="mb-0">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Cancel venue booking</button>
+                </form>
+                {% endif %}
+            </div>
+            {% endif %}
 
             {% if is_past_event and not is_organizer and fellow_participants %}
             <div class="mt-4 p-3 rounded border border-secondary bg-dark bg-opacity-25">
@@ -193,7 +247,7 @@
                         </a>
                     </div>
 
-                    {% if user.is_authenticated and not user_registration and event.has_free_spots and is_before_event %}
+                    {% if user.is_authenticated and not event_is_cancelled and not user_registration and event.has_free_spots and is_before_event %}
                     <div class="col">
                         <form method="post" action="{% url 'events:join' event.pk %}">
                             {% csrf_token %}
@@ -207,6 +261,18 @@
                         <button class="btn btn-secondary btn-action-uniform w-100" disabled>
                             <i class="bi bi-x-circle me-2"></i> Full
                         </button>
+                    </div>
+                    {% endif %}
+
+                    {% if user.is_authenticated and user_registration and user_registration.status == STATUS_REGISTERED and is_before_event %}
+                    <div class="col">
+                        <form method="post" action="{% url 'events:leave' event.pk %}" class="d-grid"
+                              onsubmit="return confirm('Leave this event? Your spot will be released.');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-warning btn-action-uniform w-100">
+                                <i class="bi bi-box-arrow-left me-2"></i> Leave event
+                            </button>
+                        </form>
                     </div>
                     {% endif %}
 
@@ -237,7 +303,7 @@
             </div>
 
             {# ── Organizer management panel ── #}
-            {% if is_organizer %}
+            {% if can_manage_participants %}
             <div class="mt-5">
                 <h5 class="mb-3 d-flex align-items-center gap-2">
                     <i class="bi bi-people-fill text-primary"></i> Manage Participants

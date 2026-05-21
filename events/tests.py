@@ -5,20 +5,29 @@ from django.urls import reverse
 from django.utils import timezone
 
 from events.models import Event, EventRegistration
+from events.visibility import can_view_event, event_is_cancelled, filter_public_events
 from events.views import _apply_no_show_penalties, get_suggested_events
 from games.models import BoardGame, Genre
+from venues.models import Venue, VenueReservation
 
 User = get_user_model()
 
 
 def make_event(organizer=None, days_ahead=1, max_players=4, current_players=0, **kwargs):
+    date_time = kwargs.pop(
+        "date_time",
+        timezone.now() + timezone.timedelta(days=days_ahead),
+    )
+    end_time = kwargs.pop("end_time", date_time + timezone.timedelta(hours=2))
     event = Event.objects.create(
         name=kwargs.get("name", "Test Event"),
         description="A fun test event.",
-        date_time=timezone.now() + timezone.timedelta(days=days_ahead),
-        location="Test Hall",
+        date_time=date_time,
+        end_time=end_time,
+        location=kwargs.get("location", "Test Hall"),
         organizer_name=organizer.username if organizer else "Organizer",
         organizer=organizer,
+        venue=kwargs.get("venue"),
         current_players=current_players,
         max_players=max_players,
     )
@@ -132,6 +141,57 @@ class JoinEventViewTest(TestCase):
         self.assertRedirects(
             response,
             f"/accounts/login/?next=/events/join/{self.event.pk}/",
+        )
+
+
+class LeaveEventViewTest(TestCase):
+    def setUp(self):
+        self.organizer = make_user("leave_org")
+        self.player = make_user("leave_player")
+        self.event = make_event(organizer=self.organizer, max_players=5, current_players=0)
+
+    def test_leave_removes_registration_and_updates_count(self):
+        self.client.login(username="leave_player", password="password")
+        self.client.post(reverse("events:join", args=[self.event.pk]))
+        self.event.refresh_from_db()
+        self.assertEqual(self.event.current_players, 1)
+
+        response = self.client.post(reverse("events:leave", args=[self.event.pk]))
+        self.assertRedirects(response, reverse("events:event_detail", args=[self.event.pk]))
+
+        reg = EventRegistration.objects.get(event=self.event, user=self.player)
+        self.assertEqual(reg.status, EventRegistration.STATUS_REMOVED)
+
+        self.event.refresh_from_db()
+        self.assertEqual(self.event.current_players, 0)
+
+    def test_leave_when_not_registered_warns(self):
+        self.client.login(username="leave_player", password="password")
+        response = self.client.post(reverse("events:leave", args=[self.event.pk]))
+        self.assertRedirects(response, reverse("events:event_detail", args=[self.event.pk]))
+
+    def test_leave_after_event_started_blocked(self):
+        self.event.date_time = timezone.now() - timezone.timedelta(minutes=5)
+        self.event.save(update_fields=["date_time"])
+
+        EventRegistration.objects.create(
+            event=self.event,
+            user=self.player,
+            status=EventRegistration.STATUS_REGISTERED,
+        )
+
+        self.client.login(username="leave_player", password="password")
+        response = self.client.post(reverse("events:leave", args=[self.event.pk]))
+        self.assertRedirects(response, reverse("events:event_detail", args=[self.event.pk]))
+
+        reg = EventRegistration.objects.get(event=self.event, user=self.player)
+        self.assertEqual(reg.status, EventRegistration.STATUS_REGISTERED)
+
+    def test_unauthenticated_leave_redirects(self):
+        response = self.client.post(reverse("events:leave", args=[self.event.pk]))
+        self.assertRedirects(
+            response,
+            f"/accounts/login/?next=/events/leave/{self.event.pk}/",
         )
 
 
@@ -266,6 +326,17 @@ class RemoveParticipantViewTest(TestCase):
 
     def test_non_organizer_cannot_remove(self):
         self.client.login(username="other", password="password")
+        self.client.post(self._remove_url())
+        self.reg.refresh_from_db()
+        self.assertNotEqual(self.reg.status, EventRegistration.STATUS_REMOVED)
+
+    def test_moderator_cannot_remove_without_being_organizer(self):
+        from django.contrib.auth.models import Group
+
+        Group.objects.get_or_create(name="Moderators")
+        mod = make_user("mod")
+        mod.groups.add(Group.objects.get(name="Moderators"))
+        self.client.login(username="mod", password="password")
         self.client.post(self._remove_url())
         self.reg.refresh_from_db()
         self.assertNotEqual(self.reg.status, EventRegistration.STATUS_REMOVED)
@@ -439,8 +510,11 @@ class EventCRUDPermissionsTest(TestCase):
                 "date_time": (timezone.now() + timezone.timedelta(days=5)).strftime(
                     "%Y-%m-%dT%H:%M"
                 ),
+                "end_time": (timezone.now() + timezone.timedelta(days=5, hours=2)).strftime(
+                    "%Y-%m-%dT%H:%M"
+                ),
                 "location": "Library",
-                "organizer_name": "other",
+                "organizer_name": "Fake Name",
                 "current_players": 1,
                 "max_players": 4,
                 "games": [game.pk],
@@ -449,6 +523,7 @@ class EventCRUDPermissionsTest(TestCase):
         event = Event.objects.filter(name="New Event").first()
         self.assertIsNotNone(event)
         self.assertEqual(event.organizer, self.other)
+        self.assertEqual(event.organizer_name, self.other.username)
 
 
 class PublicProfileViewTest(TestCase):
@@ -558,3 +633,100 @@ class PastEventVisibilityTest(TestCase):
         past = list(response.context["past_events"])
         self.assertEqual(len(past), 1)
         self.assertEqual(past[0].pk, self.event.pk)
+
+
+class ProfileMyEventsTest(TestCase):
+    def setUp(self):
+        self.user = make_user("myevents")
+        self.client.login(username="myevents", password="password")
+        start = timezone.now() + timezone.timedelta(days=2)
+        self.organized = make_event(
+            organizer=self.user,
+            name="My Organized",
+            date_time=start,
+            end_time=start + timezone.timedelta(hours=2),
+        )
+        other = make_user("otherorg")
+        joined_event = make_event(organizer=other, name="Joined Event")
+        EventRegistration.objects.create(event=joined_event, user=self.user)
+
+    def test_profile_has_my_events_context(self):
+        response = self.client.get(reverse("accounts:profile"))
+        self.assertEqual(response.status_code, 200)
+        organized = list(response.context["upcoming_organized_events"])
+        joined = list(response.context["upcoming_joined_events"])
+        self.assertEqual(len(organized), 1)
+        self.assertEqual(organized[0].name, "My Organized")
+        self.assertEqual(len(joined), 1)
+        self.assertEqual(joined[0].name, "Joined Event")
+
+
+class CancelledEventVisibilityTest(TestCase):
+    def setUp(self):
+        from django.contrib.auth.models import Group
+
+        Group.objects.get_or_create(name="Members")
+        self.organizer = make_user("organizer")
+        self.participant = make_user("participant")
+        self.other = make_user("other")
+        self.venue = Venue.objects.create(
+            name="Cafe",
+            slug="cafe",
+            address="1 St",
+            city="Sofia",
+            capacity=20,
+            table_count=4,
+        )
+        self.event = make_event(
+            organizer=self.organizer,
+            venue=self.venue,
+            name="Game Night",
+            location=self.venue.display_location(),
+        )
+        self.reservation = VenueReservation.objects.create(
+            venue=self.venue,
+            event=self.event,
+            requested_by=self.organizer,
+            status=VenueReservation.STATUS_CONFIRMED,
+        )
+        EventRegistration.objects.create(
+            event=self.event,
+            user=self.participant,
+            status=EventRegistration.STATUS_REGISTERED,
+        )
+
+    def _cancel_booking(self):
+        self.reservation.status = VenueReservation.STATUS_CANCELLED
+        self.reservation.save(update_fields=["status"])
+        self.event.refresh_from_db()
+
+    def test_cancelled_event_flag(self):
+        self._cancel_booking()
+        self.assertTrue(event_is_cancelled(self.event))
+
+    def test_public_list_excludes_cancelled(self):
+        self._cancel_booking()
+        self.assertFalse(
+            filter_public_events(Event.objects.all()).filter(pk=self.event.pk).exists()
+        )
+
+    def test_participant_can_view_cancelled_detail(self):
+        self._cancel_booking()
+        self.assertTrue(can_view_event(self.participant, self.event))
+
+    def test_other_user_cannot_view_cancelled_detail(self):
+        self._cancel_booking()
+        self.assertFalse(can_view_event(self.other, self.event))
+
+    def test_cancelled_event_in_profile_my_events_joined(self):
+        self._cancel_booking()
+        self.client.login(username="participant", password="password")
+        response = self.client.get(reverse("accounts:profile"))
+        self.assertContains(response, "Game Night")
+        self.assertContains(response, "Cancelled")
+
+    def test_cancelled_event_not_on_public_events_page(self):
+        self._cancel_booking()
+        self.client.login(username="participant", password="password")
+        response = self.client.get(reverse("events:events_list"))
+        self.assertNotContains(response, "Game Night")

@@ -492,3 +492,50 @@ body {
     border-radius: 20px;
     padding: 2px 7px;
 }
+
+/* Partner venue availability table (Bootstrap 5 dark theme) */
+.venue-availability-table thead th {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.venue-availability-table tbody tr.table-active {
+    --bs-table-bg-state: rgba(var(--bs-info-rgb), 0.2);
+    --bs-table-bg: rgba(var(--bs-info-rgb), 0.2);
+}
+
+.venue-availability-table .select-slot-btn {
+    min-width: 5.5rem;
+}
+
+.venue-availability-table .select-slot-btn[aria-pressed="true"] {
+    font-weight: 600;
+}
+
+#venue-schedule-panel input.venue-schedule-filled {
+    border-color: var(--bs-info);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-info-rgb), 0.25);
+}
+
+#venue-schedule-panel .badge {
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* Crispy / form validation — visible on dark backgrounds */
+#event-form .invalid-feedback,
+#event-form .text-danger,
+#event-form .alert-danger {
+    color: #f8a5a5 !important;
+}
+
+#event-form .form-control.is-invalid,
+#event-form .form-select.is-invalid {
+    border-color: var(--bs-danger);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-danger-rgb), 0.25);
+}
+
+#event-form .form-check-input.is-invalid {
+    border-color: var(--bs-danger);
+}

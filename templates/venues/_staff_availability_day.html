@@ -1,0 +1,34 @@
+{% if availability.slots %}
+<div class="table-responsive">
+    <table class="table table-sm table-dark table-bordered venue-availability-table mb-0">
+        <thead>
+            <tr>
+                <th scope="col">Hour</th>
+                <th scope="col" class="text-center">Tables</th>
+                <th scope="col" class="text-center">Guests</th>
+                <th scope="col" class="text-center">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for slot in availability.slots %}
+            <tr>
+                <td>{{ slot.label }}</td>
+                <td class="text-center">{{ slot.free_tables }} / {{ slot.total_tables }}</td>
+                <td class="text-center">{{ slot.guests_booked }} / {{ slot.venue_capacity }}</td>
+                <td class="text-center">
+                    {% if slot.status == "free" %}
+                    <span class="badge bg-success">Free</span>
+                    {% elif slot.status == "partial" %}
+                    <span class="badge bg-warning text-dark">Partial</span>
+                    {% else %}
+                    <span class="badge bg-danger">Full</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p class="text-muted small mb-0">No bookable hours on this date.</p>
+{% endif %}

@@ -13,6 +13,7 @@ urlpatterns = [
     path("", include("web.urls")),
     path("games/", include("games.urls")),
     path("events/", include("events.urls")),
+    path("venues/", include("venues.urls")),
     path("reviews/", include("reviews.urls")),
     path("api/", include(("api.urls", "api"), namespace="api")),
     path("api/schema/", SpectacularAPIView.as_view(), name="api_schema"),

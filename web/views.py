@@ -2,7 +2,9 @@ from django.shortcuts import render
 from django.views.generic import TemplateView
 
 from events.models import Event
+from events.visibility import filter_public_events
 from games.models import BoardGame
+from venues.models import Venue
 
 
 class IndexView(TemplateView):
@@ -10,10 +12,8 @@ class IndexView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        event_count = Event.objects.count()
-        game_count = BoardGame.objects.count()
-        context["event_count"] = event_count
-        context["game_count"] = game_count
+        context["event_count"] = filter_public_events(Event.objects.all()).count()
+        context["game_count"] = BoardGame.objects.count()
         return context
 
 
@@ -22,10 +22,12 @@ class MissionView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        event_count = Event.objects.count()
+        event_count = filter_public_events(Event.objects.all()).count()
         game_count = BoardGame.objects.count()
+        venue_count = Venue.objects.filter(is_active=True).count()
         context["event_count"] = event_count
         context["game_count"] = game_count
+        context["venue_count"] = venue_count
         return context
 
 

@@ -1,0 +1,151 @@
+{% load crispy_forms_tags %}
+
+{% if confirm_message %}
+    <div class="alert alert-danger text-center" role="alert">
+        {{ confirm_message }}
+    </div>
+{% endif %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-9 col-xl-8">
+        <form method="post" class="card p-4 shadow-sm bg-secondary-subtle border-secondary" action="{{ form_action_url }}" enctype="multipart/form-data" id="event-form" data-editing-event-pk="{{ editing_event_pk|default:'' }}">
+            {% csrf_token %}
+
+            {% if form.errors %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert" id="form-error-summary">
+                <div class="d-flex align-items-start gap-2">
+                    <i class="bi bi-exclamation-triangle-fill fs-5 flex-shrink-0"></i>
+                    <div>
+                        <strong>Could not save the event.</strong> Please fix the issues below.
+                        <ul class="mb-0 mt-2 ps-3">
+                            {% for field in form %}
+                                {% if field.errors %}
+                                    {% for error in field.errors %}
+                                    <li><span class="fw-semibold">{{ field.label }}:</span> {{ error }}</li>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endif %}
+
+            {{ form.name|as_crispy_field }}
+
+            <div class="row g-3 mb-0">
+                <div class="col-md-6">
+                    {{ form.venue|as_crispy_field }}
+                </div>
+                <div class="col-md-6 {% if form.venue.value %}d-none{% endif %}" id="location-field-wrapper">
+                    {{ form.location|as_crispy_field }}
+                </div>
+            </div>
+
+            <div id="venue-schedule-panel" class="card bg-dark border-info mb-4 {% if not form.venue.value %}d-none{% endif %}">
+                <div class="card-header bg-info bg-opacity-10 border-info py-3">
+                    <h6 class="mb-0 text-info">
+                        <i class="bi bi-calendar-week me-2"></i>Partner venue schedule
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="small text-white-50 mb-3">
+                        Booking is <strong class="text-white">confirmed immediately</strong> when you submit.
+                        Set <strong>expected players</strong> first, then <strong>Select</strong> hours in the table
+                        (gaps between two selected hours are filled in automatically).
+                        One table is held for the whole block. Capacity uses expected players even before anyone joins.
+                    </p>
+
+                    <div class="row g-3 mb-0">
+                        <div class="col-md-6">
+                            {{ form.max_players|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.current_players|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3" id="venue-date-field">
+                        {{ form.event_date|as_crispy_field }}
+                    </div>
+                    {{ form.venue_time_slots }}
+
+                    <div class="row g-3 mb-0">
+                        <div class="col-md-6">
+                            {{ form.start_time|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.end_time_field|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mb-3" aria-label="Availability legend">
+                        <span class="badge rounded-pill bg-success px-3 py-2">
+                            <i class="bi bi-check-circle me-1"></i>Available
+                        </span>
+                        <span class="badge rounded-pill bg-warning text-dark px-3 py-2">
+                            <i class="bi bi-dash-circle me-1"></i>Partial
+                        </span>
+                        <span class="badge rounded-pill bg-danger px-3 py-2">
+                            <i class="bi bi-x-circle me-1"></i>Fully booked
+                        </span>
+                    </div>
+
+                    <div class="table-responsive rounded border border-secondary">
+                        <table class="table table-dark table-striped table-hover align-middle mb-0 venue-availability-table">
+                            <thead class="table-secondary">
+                                <tr>
+                                    <th scope="col">Hour</th>
+                                    <th scope="col">Tables</th>
+                                    <th scope="col">Guests</th>
+                                    <th scope="col" class="text-center">Status</th>
+                                    <th scope="col" class="text-end">Hours</th>
+                                </tr>
+                            </thead>
+                            <tbody id="venue-hour-grid">
+                                <tr id="venue-schedule-placeholder">
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        Select a venue and date to load availability.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p id="venue-schedule-loading" class="small text-info mt-2 mb-0 d-none">
+                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        Loading availability…
+                    </p>
+                    <p id="venue-schedule-empty" class="small text-warning mt-2 mb-0 d-none"></p>
+                    <p id="venue-schedule-help" class="form-text text-muted mt-2 mb-0">
+                        Click <strong>Select</strong> on start and end hours (e.g. 14:00 and 16:00) — hours in between are included automatically.
+                    </p>
+                    <p id="venue-slot-warning" class="small text-warning mt-2 mb-0 d-none"></p>
+                </div>
+            </div>
+
+            <div id="independent-schedule-fields" class="{% if form.venue.value %}d-none{% endif %}">
+                {{ form.date_time|as_crispy_field }}
+                {{ form.end_time|as_crispy_field }}
+            </div>
+
+            <div id="players-outside-venue" class="{% if form.venue.value %}d-none{% endif %}">
+                {{ form.current_players|as_crispy_field }}
+                {{ form.max_players|as_crispy_field }}
+            </div>
+            {{ form.description|as_crispy_field }}
+            {{ form.games|as_crispy_field }}
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ cancel_url }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn {% if delete %}btn-danger{% else %}btn-primary{% endif %}">
+                    {{ button_text }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

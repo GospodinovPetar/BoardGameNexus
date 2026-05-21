@@ -2,21 +2,58 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
 from django.contrib.auth.views import LoginView, LogoutView
-from django.db.models import Count, Q
+from django.db.models import Count, IntegerField, OuterRef, Q, Subquery
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views import View
 from django.views.generic import CreateView, TemplateView
 
-from events.models import Event
-from events.visibility import PARTICIPANT_HISTORY_STATUSES
+from events.models import Event, EventRegistration
+from events.visibility import (
+    ACTIVE_REGISTRATION_STATUSES,
+    PARTICIPANT_HISTORY_STATUSES,
+    filter_active_events,
+)
 from reviews.models import GameReview, UserCollection
+from venues.models import VenueReservation
+
+
+def _upcoming_profile_events(user):
+    now = timezone.now()
+    upcoming_organized = (
+        filter_active_events(
+            Event.objects.filter(organizer=user, date_time__gt=now)
+        )
+        .select_related("venue")
+        .prefetch_related("games")
+        .order_by("date_time")
+    )
+    joined_ids = user.event_registrations.filter(
+        status__in=ACTIVE_REGISTRATION_STATUSES,
+    ).values_list("event_id", flat=True)
+    upcoming_joined = (
+        Event.objects.filter(pk__in=joined_ids, date_time__gt=now)
+        .exclude(organizer=user)
+        .select_related("venue", "venue_reservation")
+        .prefetch_related("games")
+        .order_by("date_time")
+    )
+    return upcoming_organized, upcoming_joined
 
 
 def _past_participated_events_with_player_count(user):
     """Events that have ended where `user` was a participant (not removed)."""
     now = timezone.now()
+    participant_count_subquery = (
+        EventRegistration.objects.filter(
+            event_id=OuterRef("pk"),
+            status__in=PARTICIPANT_HISTORY_STATUSES,
+        )
+        .values("event_id")
+        .annotate(cnt=Count("id"))
+        .values("cnt")
+    )
     return (
         Event.objects.filter(
             date_time__lte=now,
@@ -25,11 +62,9 @@ def _past_participated_events_with_player_count(user):
         )
         .distinct()
         .annotate(
-            player_count=Count(
-                "registrations",
-                filter=Q(
-                    registrations__status__in=PARTICIPANT_HISTORY_STATUSES,
-                ),
+            player_count=Subquery(
+                participant_count_subquery,
+                output_field=IntegerField(),
             )
         )
         .order_by("-date_time")
@@ -108,6 +143,17 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         context["past_events"] = past_events
         context["is_foreign_profile"] = False
         context["played_sessions"] = []
+        context["venue_reservations"] = (
+            VenueReservation.objects.filter(requested_by=user)
+            .select_related("venue", "event")
+            .order_by("-event__date_time")
+        )
+        context["STATUS_CONFIRMED"] = VenueReservation.STATUS_CONFIRMED
+        context["STATUS_CANCELLED"] = VenueReservation.STATUS_CANCELLED
+        context["now"] = timezone.now()
+        upcoming_organized, upcoming_joined = _upcoming_profile_events(user)
+        context["upcoming_organized_events"] = upcoming_organized
+        context["upcoming_joined_events"] = upcoming_joined
         return context
 
 
@@ -126,7 +172,12 @@ class PublicProfileView(LoginRequiredMixin, TemplateView):
             reviews = GameReview.objects.none()
             collections = UserCollection.objects.none()
             past_events = Event.objects.none()
-            played_sessions = list(_past_participated_events_with_player_count(profile_user))
+            played_sessions = list(
+                _past_participated_events_with_player_count(profile_user)
+            )
+            venue_reservations = VenueReservation.objects.none()
+            upcoming_organized = Event.objects.none()
+            upcoming_joined = Event.objects.none()
         else:
             reviews = (
                 GameReview.objects.filter(author=profile_user)
@@ -155,6 +206,12 @@ class PublicProfileView(LoginRequiredMixin, TemplateView):
                 .prefetch_related("games")
             )
             played_sessions = []
+            venue_reservations = (
+                VenueReservation.objects.filter(requested_by=profile_user)
+                .select_related("venue", "event")
+                .order_by("-event__date_time")
+            )
+            upcoming_organized, upcoming_joined = _upcoming_profile_events(profile_user)
 
         context["profile_user"] = profile_user
         context["user_profile"] = getattr(profile_user, "profile", None)
@@ -163,6 +220,12 @@ class PublicProfileView(LoginRequiredMixin, TemplateView):
         context["past_events"] = past_events
         context["is_foreign_profile"] = is_foreign
         context["played_sessions"] = played_sessions
+        context["venue_reservations"] = venue_reservations
+        context["upcoming_organized_events"] = upcoming_organized
+        context["upcoming_joined_events"] = upcoming_joined
+        context["STATUS_CONFIRMED"] = VenueReservation.STATUS_CONFIRMED
+        context["STATUS_CANCELLED"] = VenueReservation.STATUS_CANCELLED
+        context["now"] = timezone.now()
         return context
 
 

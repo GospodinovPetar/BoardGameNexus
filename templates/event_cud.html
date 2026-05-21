@@ -1,10 +1,15 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <h2 class="mb-4 text-center">{{ page_title }}</h2>
-    {% include '_form_card.html' with cancel_url=cancel_url %}
+    {% include 'events/_event_form_card.html' with cancel_url=cancel_url editing_event_pk=editing_event_pk %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/event_form_venue.js' %}"></script>
 {% endblock %}

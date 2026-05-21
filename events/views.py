@@ -17,9 +17,13 @@ from django.views.generic import (
 from events.forms import EventForm, EventSearchForm
 from events.models import Event, EventRegistration
 from events.visibility import (
+    ACTIVE_REGISTRATION_STATUSES,
     PARTICIPANT_HISTORY_STATUSES,
     can_view_event,
     event_has_started,
+    event_is_cancelled,
+    filter_public_events,
+    is_event_organizer,
     is_organizer_or_moderator,
 )
 from events.tasks import (
@@ -29,6 +33,7 @@ from events.tasks import (
     send_removed_from_event_email,
 )
 from games.models import BoardGame
+from venues.models import VenueReservation
 
 
 def _apply_no_show_penalties(event):
@@ -89,7 +94,7 @@ def get_suggested_events(user, limit=4):
     ).values_list("event_id", flat=True)
 
     return (
-        Event.objects.filter(date_time__gt=now)
+        filter_public_events(Event.objects.all())
         .exclude(pk__in=joined_event_ids)
         .filter(games__pk__in=historical_ids_list)
         .annotate(
@@ -112,8 +117,7 @@ class EventListView(ListView):
     paginate_by = 6
 
     def get_queryset(self):
-        now = timezone.now()
-        events_list = Event.objects.filter(date_time__gt=now)
+        events_list = filter_public_events(Event.objects.all())
         form = EventSearchForm(self.request.GET)
 
         if form.is_valid():
@@ -206,8 +210,9 @@ class EventDetailView(DetailView):
         event = self.object
         user = self.request.user
 
-        is_organizer = is_organizer_or_moderator(user, event)
-        can_edit_event = is_organizer
+        is_organizer = is_event_organizer(user, event)
+        can_edit_event = is_organizer_or_moderator(user, event)
+        can_manage_participants = is_organizer
 
         user_registration = None
         if user.is_authenticated:
@@ -231,8 +236,9 @@ class EventDetailView(DetailView):
         context.update(
             {
                 "is_organizer": is_organizer,
+                "can_manage_participants": can_manage_participants,
                 "can_edit_event": can_edit_event,
-                "registrations": all_registrations if is_organizer else [],
+                "registrations": all_registrations if can_manage_participants else [],
                 "user_registration": user_registration,
                 "attendance_window_open": event.attendance_window_open(),
                 "attendance_window_closed": event.attendance_window_closed(),
@@ -242,6 +248,19 @@ class EventDetailView(DetailView):
                 "STATUS_REGISTERED": EventRegistration.STATUS_REGISTERED,
                 "STATUS_PRESENT": EventRegistration.STATUS_PRESENT,
                 "STATUS_NO_SHOW": EventRegistration.STATUS_NO_SHOW,
+                "venue_reservation": getattr(event, "venue_reservation", None),
+                "event_is_cancelled": event_is_cancelled(event),
+                "can_cancel_venue_reservation": (
+                    is_organizer
+                    and event.venue_id
+                    and timezone.now() < event.date_time
+                    and getattr(
+                        getattr(event, "venue_reservation", None),
+                        "status",
+                        None,
+                    )
+                    == VenueReservation.STATUS_CONFIRMED
+                ),
             }
         )
         return context
@@ -251,6 +270,13 @@ class JoinEventView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         pk = kwargs["pk"]
         event = get_object_or_404(Event, pk=pk)
+
+        if event_is_cancelled(event):
+            messages.error(
+                request,
+                "This event has been cancelled and is no longer open for registration.",
+            )
+            return redirect("events:events_list")
 
         if event_has_started(event):
             messages.error(
@@ -312,11 +338,51 @@ class JoinEventView(LoginRequiredMixin, View):
         return self.post(request, *args, **kwargs)
 
 
+class LeaveEventView(LoginRequiredMixin, View):
+    """Allow a participant to cancel their registration before the event starts."""
+
+    def post(self, request, *args, **kwargs):
+        pk = kwargs["pk"]
+        event = get_object_or_404(Event, pk=pk)
+
+        if event_has_started(event):
+            messages.error(
+                request,
+                "You cannot leave an event that has already started.",
+            )
+            return redirect("events:event_detail", pk=pk)
+
+        reg = EventRegistration.objects.filter(event=event, user=request.user).first()
+
+        if not reg or reg.status != EventRegistration.STATUS_REGISTERED:
+            messages.warning(
+                request,
+                "You are not actively registered for this event.",
+            )
+            return redirect("events:event_detail", pk=pk)
+
+        reg.status = EventRegistration.STATUS_REMOVED
+        reg.removed_at = timezone.now()
+        reg.save(update_fields=["status", "removed_at"])
+
+        active_count = event.registrations.filter(
+            status__in=[
+                EventRegistration.STATUS_REGISTERED,
+                EventRegistration.STATUS_PRESENT,
+            ]
+        ).count()
+        event.current_players = active_count
+        event.save(update_fields=["current_players"])
+
+        messages.success(request, f'You have left "{event.name}".')
+        return redirect("events:event_detail", pk=pk)
+
+
 class RemoveParticipantView(LoginRequiredMixin, View):
     def post(self, request, event_pk, reg_pk):
         event = get_object_or_404(Event, pk=event_pk)
 
-        if not is_organizer_or_moderator(request.user, event):
+        if not is_event_organizer(request.user, event):
             messages.error(request, "You are not authorised to remove participants.")
             return redirect("events:event_detail", pk=event_pk)
 
@@ -364,7 +430,7 @@ class MarkPresentView(LoginRequiredMixin, View):
     def post(self, request, event_pk, reg_pk):
         event = get_object_or_404(Event, pk=event_pk)
 
-        if not is_organizer_or_moderator(request.user, event):
+        if not is_event_organizer(request.user, event):
             messages.error(request, "You are not authorised to mark attendance.")
             return redirect("events:event_detail", pk=event_pk)
 
@@ -398,19 +464,51 @@ class EventCreateView(LoginRequiredMixin, CreateView):
     template_name = "event_cud.html"
     success_url = reverse_lazy("events:events_list")
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
     def get_initial(self):
         initial = {}
         game_id = self.request.GET.get("game_id")
         if game_id:
             game = get_object_or_404(BoardGame, pk=game_id)
             initial["games"] = [game]
-        user = self.request.user
-        initial["organizer_name"] = user.get_full_name() or user.username
+        venue_id = self.request.GET.get("venue_id")
+        if venue_id:
+            from venues.models import Venue
+
+            venue = Venue.objects.filter(pk=venue_id, is_active=True).first()
+            if venue:
+                initial["venue"] = venue
+        start = timezone.now() + timezone.timedelta(days=5)
+        local_start = timezone.localtime(start)
+        local_end = timezone.localtime(start + timezone.timedelta(hours=2))
+        initial["date_time"] = start
+        initial["end_time"] = start + timezone.timedelta(hours=2)
+        initial["event_date"] = local_start.date()
+        initial["start_time"] = local_start.time().replace(second=0, microsecond=0)
+        initial["end_time_field"] = local_end.time().replace(second=0, microsecond=0)
         return initial
 
     def form_valid(self, form):
-        form.instance.organizer = self.request.user
-        return super().form_valid(form)
+        from django.db import transaction
+
+        from venues.reservations import ensure_confirmed_venue_reservation
+
+        user = self.request.user
+        form.instance.organizer = user
+        form.instance.organizer_name = user.get_full_name() or user.username
+        with transaction.atomic():
+            response = super().form_valid(form)
+            if form.instance.venue_id:
+                ensure_confirmed_venue_reservation(form.instance, user)
+                messages.success(
+                    self.request,
+                    "Your partner venue booking is confirmed.",
+                )
+        return response
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -418,6 +516,7 @@ class EventCreateView(LoginRequiredMixin, CreateView):
         context["form_action_url"] = reverse("events:add_event")
         context["cancel_url"] = reverse("events:events_list")
         context["page_title"] = "Create Event"
+        context["editing_event_pk"] = None
         return context
 
 
@@ -427,6 +526,11 @@ class EventUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     template_name = "event_cud.html"
     context_object_name = "event"
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
     def test_func(self):
         event = self.get_object()
         return is_organizer_or_moderator(self.request.user, event)
@@ -435,7 +539,21 @@ class EventUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return reverse("events:event_detail", kwargs={"pk": self.object.pk})
 
     def form_valid(self, form):
-        response = super().form_valid(form)
+        from django.db import transaction
+
+        from venues.reservations import (
+            cancel_venue_reservation,
+            ensure_confirmed_venue_reservation,
+        )
+
+        user = self.request.user
+        form.instance.organizer_name = user.get_full_name() or user.username
+        with transaction.atomic():
+            response = super().form_valid(form)
+            if form.instance.venue_id:
+                ensure_confirmed_venue_reservation(form.instance, user)
+            else:
+                cancel_venue_reservation(form.instance)
         messages.success(
             self.request,
             f"Successfully edited {self.object.name}!",
@@ -447,6 +565,7 @@ class EventUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         context["edit"] = True
         context["page_title"] = f"Edit {self.object.name}"
         context["button_text"] = "Edit"
+        context["editing_event_pk"] = self.object.pk
         context["cancel_url"] = reverse(
             "events:event_detail",
             kwargs={"pk": self.object.pk},

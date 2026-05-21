@@ -8,7 +8,9 @@ class EventAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "date_time",
+        "end_time",
         "location",
+        "venue",
         "organizer_name",
         "organizer",
         "current_players",
@@ -18,6 +20,7 @@ class EventAdmin(admin.ModelAdmin):
     list_filter = (
         "date_time",
         "location",
+        "venue",
         "organizer_name",
         "current_players",
         "max_players",
@@ -25,7 +28,7 @@ class EventAdmin(admin.ModelAdmin):
     )
     search_fields = ("name", "description", "location", "organizer_name")
     ordering = ("date_time", "name")
-    raw_id_fields = ("organizer",)
+    raw_id_fields = ("organizer", "venue")
 
 
 @admin.register(EventRegistration)

@@ -46,6 +46,9 @@ class EventSerializer(serializers.ModelSerializer):
         queryset=BoardGame.objects.all(),
     )
     has_free_spots = serializers.SerializerMethodField()
+    google_maps_url = serializers.SerializerMethodField()
+    venue_total_price = serializers.SerializerMethodField()
+    venue_price_per_person = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
@@ -54,17 +57,38 @@ class EventSerializer(serializers.ModelSerializer):
             "name",
             "description",
             "date_time",
+            "end_time",
             "location",
+            "venue",
             "organizer_name",
             "current_players",
             "max_players",
             "games",
             "has_free_spots",
+            "google_maps_url",
+            "venue_total_price",
+            "venue_price_per_person",
         ]
-        read_only_fields = ["has_free_spots"]
+        read_only_fields = [
+            "has_free_spots",
+            "google_maps_url",
+            "venue_total_price",
+            "venue_price_per_person",
+        ]
 
     def get_has_free_spots(self, obj):
         return obj.has_free_spots()
+
+    def get_google_maps_url(self, obj):
+        return obj.google_maps_url
+
+    def get_venue_total_price(self, obj):
+        total = obj.venue_total_price
+        return float(total) if total is not None else None
+
+    def get_venue_price_per_person(self, obj):
+        per_person = obj.venue_price_per_person
+        return float(per_person) if per_person is not None else None
 
 
 class GameReviewSerializer(serializers.ModelSerializer):

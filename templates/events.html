@@ -83,7 +83,12 @@
                         <i class="bi bi-calendar-date me-1"></i>{{ event.date_time|date:"d M Y, H:i" }}
                     </p>
                     <p class="text-muted small mb-2">
-                        <i class="bi bi-geo-alt me-1"></i>{{ event.location }}
+                        <i class="bi bi-geo-alt me-1"></i>
+                        {% if event.venue %}
+                            <a href="{% url 'venues:venue_detail' event.venue.slug %}" class="text-decoration-none">{{ event.display_location }}</a>
+                        {% else %}
+                            {{ event.display_location }}
+                        {% endif %}
                     </p>
 
                     <div class="mb-2">

@@ -31,6 +31,7 @@
                                 <li><a class="dropdown-item" href="{% url 'web:index' %}"><i class="bi bi-house-door me-2"></i>Home</a></li>
                                 <li><a class="dropdown-item" href="{% url 'games:games' %}"><i class="bi bi-grid-3x3-gap me-2"></i>All Games</a></li>
                                 <li><a class="dropdown-item" href="{% url 'events:events_list' %}"><i class="bi bi-calendar-event me-2"></i>Events</a></li>
+                                <li><a class="dropdown-item" href="{% url 'venues:venue_list' %}"><i class="bi bi-shop me-2"></i>Venues</a></li>
                                 <li><a class="dropdown-item" href="{% url 'reviews:reviews_list' %}"><i class="bi bi-chat-square-text me-2"></i>Reviews</a></li>
                             </ul>
                         </li>
@@ -51,6 +52,9 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-lg-end" aria-labelledby="navAccount">
                                 <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person me-2"></i>Profile</a></li>
+                                {% if user_has_venue_dashboard %}
+                                <li><a class="dropdown-item" href="{% url 'venues:dashboard' %}"><i class="bi bi-calendar-check me-2"></i>Venue Dashboard</a></li>
+                                {% endif %}
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form method="post" action="{% url 'accounts:logout' %}" class="px-2 py-1 mb-0">

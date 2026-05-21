@@ -12,3 +12,6 @@ class WebTests(TestCase):
         response = self.client.get(reverse("web:mission"))
 
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Our Mission")
+        self.assertContains(response, "Partner Venues")
+        self.assertContains(response, "Active Events")
