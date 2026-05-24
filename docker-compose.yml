@@ -25,6 +25,8 @@ services:
 
   web:
     build: .
+    env_file:
+      - .env
     command: >
       sh -c "python manage.py makemigrations && python manage.py migrate --noinput && python manage.py loaddata initial_data.json &&
              exec python manage.py runserver 0.0.0.0:8000"
@@ -50,6 +52,7 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
       SMTP_USE_SSL: ${SMTP_USE_SSL:-false}
+      BGG_API_KEY: ${BGG_API_KEY:-}
     volumes:
       - ./media:/app/media
       - ./staticfiles:/app/staticfiles
@@ -63,6 +66,8 @@ services:
 
   celery:
     build: .
+    env_file:
+      - .env
     command: celery -A BoardGameNexus worker -l info
     environment:
       SECRET_KEY: ${SECRET_KEY:-docker-dev-only-change-me}
@@ -83,6 +88,7 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
       SMTP_USE_SSL: ${SMTP_USE_SSL:-false}
+      BGG_API_KEY: ${BGG_API_KEY:-}
     volumes:
       - ./media:/app/media
       - ./staticfiles:/app/staticfiles

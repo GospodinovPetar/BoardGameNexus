@@ -13,7 +13,7 @@
 <body>
 {% block nav %}
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-secondary shadow-sm">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-secondary shadow-sm app-navbar">
             <div class="container-fluid">
                 <a class="navbar-brand py-1" href="{% url 'web:index' %}">
                     <img src="{% static 'images/logo.jpg' %}" alt="BoardGame Nexus Logo" class="app-brand-logo">
@@ -22,57 +22,60 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navExplore" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-compass me-1" aria-hidden="true"></i>Explore
+                    <ul class="navbar-nav mx-lg-auto align-items-lg-center gap-lg-1 app-navbar-main">
+                        <li class="nav-item">
+                            <a class="nav-link app-nav-link{% if nav_events_active %} active{% endif %}" href="{% url 'events:events_list' %}">
+                                <i class="bi bi-calendar-event me-1" aria-hidden="true"></i>Events
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-lg-end" aria-labelledby="navExplore">
-                                <li><a class="dropdown-item" href="{% url 'web:index' %}"><i class="bi bi-house-door me-2"></i>Home</a></li>
-                                <li><a class="dropdown-item" href="{% url 'games:games' %}"><i class="bi bi-grid-3x3-gap me-2"></i>All Games</a></li>
-                                <li><a class="dropdown-item" href="{% url 'events:events_list' %}"><i class="bi bi-calendar-event me-2"></i>Events</a></li>
-                                <li><a class="dropdown-item" href="{% url 'venues:venue_list' %}"><i class="bi bi-shop me-2"></i>Venues</a></li>
-                                <li><a class="dropdown-item" href="{% url 'reviews:reviews_list' %}"><i class="bi bi-chat-square-text me-2"></i>Reviews</a></li>
-                            </ul>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navAbout" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-info-circle me-1" aria-hidden="true"></i>About
+                        <li class="nav-item">
+                            <a class="nav-link app-nav-link{% if nav_venues_active %} active{% endif %}" href="{% url 'venues:venue_list' %}">
+                                <i class="bi bi-shop me-1" aria-hidden="true"></i>Venues
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-lg-end" aria-labelledby="navAbout">
-                                <li><a class="dropdown-item" href="{% url 'web:mission' %}"><i class="bi bi-flag me-2"></i>Our Mission</a></li>
-                                <li><a class="dropdown-item" href="{% url 'web:contact' %}"><i class="bi bi-envelope me-2"></i>Contact Us</a></li>
-                                <li><a class="dropdown-item" href="{% url 'api_docs' %}"><i class="bi bi-code-slash me-2"></i>API</a></li>
-                            </ul>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link app-nav-link{% if nav_mission_active %} active{% endif %}" href="{% url 'web:mission' %}">
+                                <i class="bi bi-flag me-1" aria-hidden="true"></i>Mission
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link app-nav-link{% if nav_contact_active %} active{% endif %}" href="{% url 'web:contact' %}">
+                                <i class="bi bi-envelope me-1" aria-hidden="true"></i>Contact
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav ms-lg-auto align-items-lg-center gap-lg-2 app-navbar-actions">
                         {% if user.is_authenticated %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navAccount" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-person-circle me-1" aria-hidden="true"></i>Account
+                        {% if user_has_venue_dashboard %}
+                        <li class="nav-item">
+                            <a class="nav-link app-nav-link{% if request.resolver_match.url_name == 'dashboard' %} active{% endif %}" href="{% url 'venues:dashboard' %}">
+                                <i class="bi bi-calendar-check me-1" aria-hidden="true"></i>Dashboard
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-lg-end" aria-labelledby="navAccount">
-                                <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person me-2"></i>Profile</a></li>
-                                {% if user_has_venue_dashboard %}
-                                <li><a class="dropdown-item" href="{% url 'venues:dashboard' %}"><i class="bi bi-calendar-check me-2"></i>Venue Dashboard</a></li>
-                                {% endif %}
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <form method="post" action="{% url 'accounts:logout' %}" class="px-2 py-1 mb-0">
-                                        {% csrf_token %}
-                                        <button type="submit" class="dropdown-item rounded text-danger"><i class="bi bi-box-arrow-right me-2"></i>Log out</button>
-                                    </form>
-                                </li>
-                            </ul>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link app-nav-link" href="{% url 'accounts:profile' %}">
+                                <i class="bi bi-person me-1" aria-hidden="true"></i>Profile
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <form method="post" action="{% url 'accounts:logout' %}" class="d-inline mb-0">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-secondary app-nav-logout">
+                                    <i class="bi bi-box-arrow-right me-1"></i>Log out
+                                </button>
+                            </form>
                         </li>
                         {% else %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navSignIn" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i>Sign in
+                        <li class="nav-item">
+                            <a class="nav-link app-nav-link" href="{% url 'accounts:login' %}">
+                                <i class="bi bi-key me-1" aria-hidden="true"></i>Log in
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-lg-end" aria-labelledby="navSignIn">
-                                <li><a class="dropdown-item" href="{% url 'accounts:login' %}"><i class="bi bi-key me-2"></i>Log in</a></li>
-                                <li><a class="dropdown-item" href="{% url 'accounts:register' %}"><i class="bi bi-person-plus me-2"></i>Register</a></li>
-                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-sm btn-warning" href="{% url 'accounts:register' %}">
+                                <i class="bi bi-person-plus me-1"></i>Register
+                            </a>
                         </li>
                         {% endif %}
                     </ul>
@@ -104,6 +107,9 @@
             <div class="row">
                 <div class="col-md-12 text-center">
                     <p class="mb-0 text-muted">&copy; {% now "Y" %} BoardGame Nexus. All rights reserved.</p>
+                    <p class="small text-muted mt-2 mb-0">
+                        <a href="{% url 'api_docs' %}" class="text-muted text-decoration-none">API documentation</a>
+                    </p>
                     <div class="social-icons mt-3">
                         <a href="#" class="text-white mx-2"><i class="bi bi-facebook fs-4"></i></a>
                         <a href="#" class="text-white mx-2"><i class="bi bi-twitter fs-4"></i></a>

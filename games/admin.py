@@ -1,16 +1,26 @@
 from django.contrib import admin
 
-from games.models import BoardGame, Genre
+from games.models import BoardGame
 
 
 @admin.register(BoardGame)
 class BoardGameAdmin(admin.ModelAdmin):
-    list_display = ("title", "genre", "release_date", "min_players", "max_players")
-    list_filter = ("genre",)
-    search_fields = ("title", "description")
+    list_display = ("title", "bgg_id", "year_published", "min_players", "max_players")
+    search_fields = ("title", "bgg_id")
+    readonly_fields = (
+        "bgg_id",
+        "title",
+        "year_published",
+        "min_players",
+        "max_players",
+        "description",
+        "image_url",
+        "bgg_url",
+    )
     ordering = ("title",)
 
+    def has_add_permission(self, request):
+        return False
 
-@admin.register(Genre)
-class GenreAdmin(admin.ModelAdmin):
-    search_fields = ("name",)
+    def has_change_permission(self, request, obj=None):
+        return False

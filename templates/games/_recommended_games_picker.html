@@ -1,0 +1,75 @@
+{% load static %}
+<section
+    class="recommended-games-picker mb-4{% if not recommended_games and recommended_scope != 'venue' %} d-none{% endif %}"
+    id="event-recommended-games"
+    data-scope="{{ recommended_scope|default:'global' }}"
+    data-venue-name="{{ recommended_venue_name|default:'' }}"
+    data-global-recommended-url="{% url 'api:game_recommended' %}"
+    data-placeholder-url="{% static 'images/placeholder_game.png' %}"
+>
+    <div class="recommended-games-picker-header">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <i class="bi bi-trophy-fill text-warning"></i>
+            <h2 class="h6 mb-0 text-white recommended-games-picker-title">
+                {% if recommended_scope == 'venue' and recommended_venue_name %}
+                Top picks at {{ recommended_venue_name }}
+                {% else %}
+                Recommended on BoardGameGeek
+                {% endif %}
+            </h2>
+            <span class="badge bg-warning text-dark recommended-games-picker-count">
+                Top {{ recommended_games|length }}
+            </span>
+        </div>
+        <p class="text-muted small mb-3 recommended-games-picker-subtitle">
+            {% if recommended_scope == 'venue' %}
+            Highest-rated games from this venue’s library — click Add to include them in your event.
+            {% else %}
+            Highest-ranked board games from BGG — click Add to include them in this event.
+            {% endif %}
+        </p>
+    </div>
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-2 recommended-games-picker-grid">
+        {% for item in recommended_games %}
+        <div class="col">
+            <div class="card bg-dark text-white border border-warning border-opacity-25 h-100">
+                <div class="card-body p-2 d-flex flex-column">
+                    {% if item.game.image_url %}
+                    <img src="{{ item.game.image_url }}" class="rounded mb-2 recommended-picker-thumb" alt="">
+                    {% else %}
+                    <img src="{% static 'images/placeholder_game.png' %}" class="rounded mb-2 recommended-picker-thumb" alt="">
+                    {% endif %}
+                    <div class="small fw-semibold text-truncate" title="{{ item.game.title }}">{{ item.game.title }}</div>
+                    {% if item.bgg_rating %}
+                    <div class="small text-warning"><i class="bi bi-star-fill"></i> {{ item.bgg_rating }}</div>
+                    {% endif %}
+                    <div class="mt-auto d-flex flex-column gap-1 pt-2">
+                        <button type="button"
+                                class="btn btn-sm btn-warning recommended-add-btn"
+                                data-bgg-id="{{ item.game.bgg_id }}"
+                                data-local-id="{{ item.game.id }}"
+                                data-title="{{ item.game.title|escapejs }}"
+                                data-image-url="{{ item.game.image_url|escapejs }}"
+                                {% if item.game.year_published %}data-year-published="{{ item.game.year_published }}"{% endif %}>
+                            <i class="bi bi-plus-lg me-1"></i>Add
+                        </button>
+                        <a href="{{ item.game.bgg_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary">
+                            BGG
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <p class="text-muted small mt-2 mb-0 recommended-games-picker-empty{% if recommended_games %} d-none{% endif %}">
+        This venue has no games in its library yet. Ask venue staff to add titles, or pick from the catalog below.
+    </p>
+</section>
+<style>
+.recommended-picker-thumb {
+    height: 72px;
+    width: 100%;
+    object-fit: cover;
+}
+</style>

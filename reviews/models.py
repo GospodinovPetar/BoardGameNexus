@@ -39,6 +39,44 @@ class GameReview(models.Model):
         return reverse("reviews:review_detail", kwargs={"pk": self.pk})
 
 
+class VenueReview(models.Model):
+    venue = models.ForeignKey(
+        "venues.Venue",
+        on_delete=models.CASCADE,
+        related_name="reviews",
+    )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="venue_reviews",
+    )
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    rating = models.PositiveSmallIntegerField(
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5),
+        ],
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        unique_together = [["venue", "author"]]
+        verbose_name = "Venue review"
+        verbose_name_plural = "Venue reviews"
+
+    def __str__(self):
+        return f"{self.author.username}'s review of {self.venue.name}"
+
+    def get_absolute_url(self):
+        return reverse(
+            "venues:venue_review_list",
+            kwargs={"slug": self.venue.slug},
+        )
+
+
 class UserCollection(models.Model):
     STATUS_CHOICES = [
         ("want", "Want to Play"),

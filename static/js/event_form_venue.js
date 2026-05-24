@@ -288,6 +288,42 @@
         }
     }
 
+    function selectedVenueName() {
+        if (!venueSelect || !venueSelect.value) return "";
+        const opt = venueSelect.options[venueSelect.selectedIndex];
+        return opt ? opt.text.trim() : "";
+    }
+
+    async function fetchVenueGames(venueId) {
+        const venueName = selectedVenueName();
+        if (!venueId) {
+            document.dispatchEvent(
+                new CustomEvent("venue-games-changed", {
+                    detail: { venueId: null, games: [], venueName: "" },
+                })
+            );
+            return;
+        }
+        try {
+            const res = await fetch("/api/venues/" + venueId + "/games/", {
+                headers: { Accept: "application/json" },
+            });
+            if (!res.ok) return;
+            const games = await res.json();
+            document.dispatchEvent(
+                new CustomEvent("venue-games-changed", {
+                    detail: { venueId: venueId, games: games, venueName: venueName },
+                })
+            );
+        } catch (_e) {
+            document.dispatchEvent(
+                new CustomEvent("venue-games-changed", {
+                    detail: { venueId: venueId, games: [], venueName: venueName },
+                })
+            );
+        }
+    }
+
     function toggleVenueMode() {
         const hasVenue = venueSelect && venueSelect.value;
         if (hasVenue) {
@@ -297,6 +333,7 @@
             setScheduleMode(true);
             defaultVenueTimesIfEmpty();
             loadAvailability();
+            fetchVenueGames(venueSelect.value);
         } else {
             locationWrapper.classList.remove("d-none");
             schedulePanel.classList.add("d-none");
@@ -305,6 +342,7 @@
             selectedSlots.clear();
             syncHiddenSlots();
             hourGridBody.innerHTML = PLACEHOLDER_ROW;
+            fetchVenueGames(null);
         }
     }
 

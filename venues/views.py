@@ -2,7 +2,7 @@ from collections import OrderedDict
 from datetime import datetime, timedelta
 
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Avg, Count, Q
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -10,12 +10,14 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.views import View
-from django.views.generic import DetailView, ListView, TemplateView
+from django.views.generic import CreateView, DetailView, ListView, TemplateView, UpdateView
 
 from events.models import Event
+from games.picker_context import games_to_picker_json, selected_games_from_form
 from venues.forms import (
     ReservationDashboardForm,
     StaffCancelReservationForm,
+    VenueForm,
     VenueSearchForm,
 )
 from venues.availability import get_venue_availability
@@ -37,7 +39,15 @@ class VenueListView(ListView):
     paginate_by = 9
 
     def get_queryset(self):
-        queryset = Venue.objects.filter(is_active=True)
+        queryset = (
+            Venue.objects.filter(is_active=True)
+            .annotate(
+                game_count=Count("games", distinct=True),
+                review_avg=Avg("reviews__rating"),
+                review_count=Count("reviews"),
+            )
+            .prefetch_related("games")
+        )
         form = VenueSearchForm(self.request.GET)
         if form.is_valid():
             name = form.cleaned_data.get("name")
@@ -51,6 +61,9 @@ class VenueListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["form"] = VenueSearchForm(self.request.GET)
+        page_obj = context.get("page_obj")
+        if page_obj:
+            context["total_venue_count"] = page_obj.paginator.count
         return context
 
 
@@ -61,13 +74,31 @@ class VenueDetailView(DetailView):
     slug_url_kwarg = "slug"
 
     def get_queryset(self):
-        return Venue.objects.filter(is_active=True).prefetch_related("games")
+        return (
+            Venue.objects.filter(is_active=True)
+            .annotate(
+                game_count=Count("games", distinct=True),
+                review_avg=Avg("reviews__rating"),
+                review_count=Count("reviews"),
+            )
+            .prefetch_related("games")
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         venue = self.object
         now = timezone.now()
         user = self.request.user
+
+        context["venue_reviews"] = (
+            venue.reviews.select_related("author").order_by("-created_at")[:3]
+        )
+        context["review_avg"] = venue.reviews.aggregate(avg=Avg("rating"))["avg"]
+        context["review_count"] = venue.reviews.count()
+        context["user_has_venue_review"] = (
+            user.is_authenticated and venue.reviews.filter(author=user).exists()
+        )
+        context["venue_game_count"] = venue.games.count()
 
         upcoming_confirmed = (
             Event.objects.filter(
@@ -107,6 +138,84 @@ class VenueDetailView(DetailView):
             context["dashboard_day_url"] = None
         context["STATUS_CONFIRMED"] = VenueReservation.STATUS_CONFIRMED
         context["STATUS_CANCELLED"] = VenueReservation.STATUS_CANCELLED
+        return context
+
+
+def _user_can_manage_venues(user):
+    return user.is_superuser or user.groups.filter(name="Moderators").exists()
+
+
+class VenueCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    model = Venue
+    form_class = VenueForm
+    template_name = "venue_cud.html"
+
+    def test_func(self):
+        return _user_can_manage_venues(self.request.user)
+
+    def get_success_url(self):
+        return reverse("venues:venue_detail", kwargs={"slug": self.object.slug})
+
+    def form_valid(self, form):
+        self.object = form.save()
+        games = form.cleaned_data.get("games")
+        if games is not None:
+            self.object.games.set(games)
+            from games.services.cache import invalidate_venue_recommended_cache
+
+            invalidate_venue_recommended_cache(self.object.pk)
+        return redirect(self.get_success_url())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["page_title"] = "Add venue"
+        context["button_text"] = "Create venue"
+        context["cancel_url"] = reverse("venues:venue_list")
+        context["game_picker_mode"] = "full"
+        context["initial_games_json"] = games_to_picker_json(
+            selected_games_from_form(context["form"])
+        )
+        context["allowed_games_json"] = "[]"
+        return context
+
+
+class VenueUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Venue
+    form_class = VenueForm
+    template_name = "venue_cud.html"
+    slug_url_kwarg = "slug"
+
+    def test_func(self):
+        if _user_can_manage_venues(self.request.user):
+            return True
+        return is_venue_staff(self.request.user, self.get_object())
+
+    def get_success_url(self):
+        return reverse("venues:venue_detail", kwargs={"slug": self.object.slug})
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        games = form.cleaned_data.get("games")
+        if games is not None:
+            self.object.games.set(games)
+            from games.services.cache import invalidate_venue_recommended_cache
+
+            invalidate_venue_recommended_cache(self.object.pk)
+        return response
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["page_title"] = f"Edit {self.object.name}"
+        context["button_text"] = "Save venue"
+        context["cancel_url"] = reverse(
+            "venues:venue_detail",
+            kwargs={"slug": self.object.slug},
+        )
+        context["game_picker_mode"] = "full"
+        context["initial_games_json"] = games_to_picker_json(
+            list(self.object.games.order_by("title"))
+        )
+        context["allowed_games_json"] = "[]"
         return context
 
 

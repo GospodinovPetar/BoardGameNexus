@@ -33,7 +33,14 @@ from events.tasks import (
     send_removed_from_event_email,
 )
 from games.models import BoardGame
-from venues.models import VenueReservation
+from games.picker_context import (
+    games_to_picker_json,
+    resolve_picker_mode,
+    selected_games_from_form,
+    venue_games_to_picker_json,
+)
+from games.services.recommended import load_recommended_games, load_venue_recommended_games
+from venues.models import Venue, VenueReservation
 
 
 def _apply_no_show_penalties(event):
@@ -58,6 +65,27 @@ def _apply_no_show_penalties(event):
         penalised.append(reg.user)
 
     return penalised
+
+
+def _event_form_picker_context(form):
+    venue = form._selected_venue() if hasattr(form, "_selected_venue") else None
+    mode = resolve_picker_mode(venue)
+    if mode == "venue_catalog" and venue:
+        recommended_games = load_venue_recommended_games(venue)
+        recommended_scope = "venue"
+        recommended_venue_name = venue.name
+    else:
+        recommended_games = load_recommended_games()
+        recommended_scope = "global"
+        recommended_venue_name = ""
+    return {
+        "game_picker_mode": mode,
+        "initial_games_json": games_to_picker_json(selected_games_from_form(form)),
+        "allowed_games_json": venue_games_to_picker_json(venue),
+        "recommended_games": recommended_games,
+        "recommended_scope": recommended_scope,
+        "recommended_venue_name": recommended_venue_name,
+    }
 
 
 def get_suggested_events(user, limit=4):
@@ -147,8 +175,11 @@ class EventListView(ListView):
                 events_list = events_list.filter(date_time__lte=date_time_before)
             if date_time_after:
                 events_list = events_list.filter(date_time__gte=date_time_after)
-            if games:
-                events_list = events_list.filter(games__in=games).distinct()
+            game_title = form.cleaned_data.get("game_title")
+            if game_title:
+                events_list = events_list.filter(
+                    games__title__icontains=game_title
+                ).distinct()
 
             if sort_by:
                 events_list = events_list.order_by(sort_by)
@@ -472,13 +503,16 @@ class EventCreateView(LoginRequiredMixin, CreateView):
     def get_initial(self):
         initial = {}
         game_id = self.request.GET.get("game_id")
+        bgg_id = self.request.GET.get("bgg_id")
         if game_id:
             game = get_object_or_404(BoardGame, pk=game_id)
             initial["games"] = [game]
+        elif bgg_id:
+            game = BoardGame.objects.filter(bgg_id=bgg_id).first()
+            if game:
+                initial["games"] = [game]
         venue_id = self.request.GET.get("venue_id")
         if venue_id:
-            from venues.models import Venue
-
             venue = Venue.objects.filter(pk=venue_id, is_active=True).first()
             if venue:
                 initial["venue"] = venue
@@ -517,6 +551,7 @@ class EventCreateView(LoginRequiredMixin, CreateView):
         context["cancel_url"] = reverse("events:events_list")
         context["page_title"] = "Create Event"
         context["editing_event_pk"] = None
+        context.update(_event_form_picker_context(context["form"]))
         return context
 
 
@@ -574,6 +609,7 @@ class EventUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             "events:edit_event",
             kwargs={"pk": self.object.pk},
         )
+        context.update(_event_form_picker_context(context["form"]))
         return context
 
 

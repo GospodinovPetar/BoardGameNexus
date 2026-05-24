@@ -36,8 +36,8 @@
                     <div class="col-md-6">
                         <div class="card bg-secondary-subtle border-secondary h-100">
                             <div class="card-body">
-                                <h3 class="h5 text-success"><i class="bi bi-controller me-2"></i>Expanding the Arsenal</h3>
-                                <p class="text-muted mb-0">Browse games, reviews, and collections to discover your next favourite title.</p>
+                                <h3 class="h5 text-success"><i class="bi bi-controller me-2"></i>Games at Events</h3>
+                                <p class="text-muted mb-0">See which titles are played at each event and explore them on BoardGameGeek.</p>
                             </div>
                         </div>
                     </div>
@@ -52,21 +52,14 @@
                 </div>
 
                 <div class="row justify-content-center g-3">
-                    <a href="{% url 'events:events_list' %}" class="col-md-4 col-sm-8 text-decoration-none text-reset">
+                    <a href="{% url 'events:events_list' %}" class="col-md-5 col-sm-8 text-decoration-none text-reset">
                         <div class="p-4 rounded-3 text-bg-info shadow-sm h-100 d-flex flex-column justify-content-center align-items-center">
                             <i class="bi bi-calendar-event display-6 mb-2"></i>
                             <h3 class="fw-bold mb-1">{{ event_count }}</h3>
                             <p class="lead mb-0">Active Events</p>
                         </div>
                     </a>
-                    <a href="{% url 'games:games' %}" class="col-md-4 col-sm-8 text-decoration-none text-reset">
-                        <div class="p-4 rounded-3 text-bg-success shadow-sm h-100 d-flex flex-column justify-content-center align-items-center">
-                            <i class="bi bi-controller display-6 mb-2"></i>
-                            <h3 class="fw-bold mb-1">{{ game_count }}</h3>
-                            <p class="lead mb-0">Available Games</p>
-                        </div>
-                    </a>
-                    <a href="{% url 'venues:venue_list' %}" class="col-md-4 col-sm-8 text-decoration-none text-reset">
+                    <a href="{% url 'venues:venue_list' %}" class="col-md-5 col-sm-8 text-decoration-none text-reset">
                         <div class="p-4 rounded-3 text-bg-primary shadow-sm h-100 d-flex flex-column justify-content-center align-items-center">
                             <i class="bi bi-shop display-6 mb-2"></i>
                             <h3 class="fw-bold mb-1">{{ venue_count }}</h3>

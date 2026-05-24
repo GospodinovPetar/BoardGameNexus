@@ -70,6 +70,17 @@
                         {{ venue.description|default:"No description available for this venue." }}
                     </p>
 
+                    {% if is_venue_staff %}
+                    <div class="d-flex flex-wrap gap-2 mt-4">
+                        <a href="{% url 'venues:edit_venue' venue.slug %}" class="btn btn-outline-info">
+                            <i class="bi bi-pencil-square me-1"></i>Edit venue
+                        </a>
+                        <a href="{% url 'venues:edit_venue' venue.slug %}#venue-games-picker" class="btn btn-outline-warning">
+                            <i class="bi bi-dice-5 me-1"></i>Manage game library
+                        </a>
+                    </div>
+                    {% endif %}
+
                     {% if user.is_authenticated %}
                     <div class="mt-4">
                         <a href="{% url 'events:add_event' %}?venue_id={{ venue.pk }}" class="btn btn-join-event">
@@ -152,17 +163,61 @@
     </div>
     {% endif %}
 
+    <div class="mt-5">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <h3 class="h5 text-white mb-0"><i class="bi bi-chat-square-text me-2 text-warning"></i>Reviews</h3>
+            <div class="d-flex flex-wrap gap-2">
+                {% if review_count %}
+                <a href="{% url 'venues:venue_review_list' venue.slug %}" class="btn btn-sm btn-outline-warning">View all reviews</a>
+                {% endif %}
+                {% if user.is_authenticated and not user_has_venue_review %}
+                <a href="{% url 'venues:venue_review_create' venue.slug %}" class="btn btn-sm btn-warning">Write a review</a>
+                {% endif %}
+            </div>
+        </div>
+        {% if review_count %}
+        <p class="text-muted small mb-3">
+            <span class="text-warning"><i class="bi bi-star-fill"></i> {{ review_avg|floatformat:1 }}</span>
+            · {{ review_count }} review{{ review_count|pluralize }}
+        </p>
+        <div class="row g-3 mb-2">
+            {% for review in venue_reviews %}
+            <div class="col-md-4">
+                <div class="card bg-dark border-secondary h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between gap-2 mb-2">
+                            <span class="fw-semibold">{{ review.title|truncatewords:6 }}</span>
+                            <span class="badge bg-warning text-dark">{{ review.rating }}/5</span>
+                        </div>
+                        <p class="small text-muted mb-0">{{ review.author.username }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">No reviews yet. Visit this venue and share your experience.</p>
+        {% endif %}
+    </div>
+
     {% if venue.games.all %}
     <div class="mt-5">
         <h3 class="h5 text-white mb-3"><i class="bi bi-dice-5 me-2"></i>Games available at this venue</h3>
         <ul class="list-group list-group-flush">
             {% for game in venue.games.all %}
             <li class="list-group-item bg-transparent border-secondary px-0 py-2">
-                <a href="{% url 'games:game_details' game.pk %}" class="text-decoration-none fw-semibold">{{ game.title }}</a>
-                <span class="text-muted small ms-2">{{ game.genre.name }}</span>
+                <a href="{{ game.bgg_url }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none fw-semibold">{{ game.title }}</a>
+                {% if game.year_published %}<span class="text-muted small ms-2">{{ game.year_published }}</span>{% endif %}
             </li>
             {% endfor %}
         </ul>
+    </div>
+    {% elif is_venue_staff %}
+    <div class="alert alert-secondary border-secondary mt-5">
+        <i class="bi bi-info-circle me-2"></i>
+        No games in the library yet.
+        <a href="{% url 'venues:edit_venue' venue.slug %}#venue-games-picker">Add games</a>
+        so organizers can pick titles when booking events.
     </div>
     {% endif %}
 

@@ -1,0 +1,80 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/game_picker.css' %}">
+<div
+    class="game-picker game-picker-panel mb-3"
+    id="{{ picker_id }}"
+    data-mode="{{ picker_mode|default:'full' }}"
+    data-input-name="{{ input_name|default:'games' }}"
+    data-initial-games="{{ initial_games_json|default:'[]' }}"
+    data-allowed-games="{{ allowed_games_json|default:'[]' }}"
+    data-search-url="{% url 'api:game_search' %}"
+    data-ensure-url="{% url 'api:game_ensure' %}"
+    data-csrf-token="{{ csrf_token }}"
+    data-placeholder-url="{% static 'images/placeholder_game.png' %}"
+>
+    <div class="game-picker-header">
+        <div class="game-picker-header-icon" aria-hidden="true">
+            <i class="bi bi-dice-5-fill"></i>
+        </div>
+        <div class="game-picker-header-text">
+            <label class="form-label" for="{{ picker_id }}-search">{{ picker_label|default:"Games to play" }}</label>
+            <p class="game-picker-hint" id="{{ picker_id }}-hint">
+                {% if picker_mode == 'venue_catalog' %}
+                    Pick from this venue’s library — search filters the list below.
+                {% else %}
+                    Search BoardGameGeek’s catalog and add every game you plan to play.
+                {% endif %}
+            </p>
+        </div>
+        <span class="game-picker-mode-badge" id="{{ picker_id }}-mode-badge">
+            {% if picker_mode == 'venue_catalog' %}Venue{% else %}BGG{% endif %}
+        </span>
+    </div>
+
+    <div class="game-picker-search-area">
+        <div class="game-picker-search-wrap">
+            <i class="bi bi-search search-icon" aria-hidden="true"></i>
+            <input
+                type="search"
+                class="game-picker-search"
+                id="{{ picker_id }}-search"
+                placeholder="{% if picker_mode == 'venue_catalog' %}Filter venue games…{% else %}Search e.g. Catan, Wingspan…{% endif %}"
+                autocomplete="off"
+                aria-label="Search board games"
+                aria-expanded="false"
+                aria-controls="{{ picker_id }}-dropdown"
+            />
+            <span class="game-picker-loading d-none" role="status" aria-live="polite">
+                <span class="spinner-border spinner-border-sm text-info" aria-hidden="true"></span>
+            </span>
+        </div>
+        <div
+            class="game-picker-dropdown d-none"
+            id="{{ picker_id }}-dropdown"
+            role="listbox"
+            aria-label="Search results"
+        ></div>
+        <p class="game-picker-stale-hint small text-muted mb-0 mt-1 d-none">
+            Showing cached results — BoardGameGeek may be temporarily unavailable.
+        </p>
+    </div>
+
+    <div class="game-picker-selected-section">
+        <div class="game-picker-selected-header">
+            <p class="game-picker-selected-label mb-0">Selected</p>
+            <span class="game-picker-count is-zero" id="{{ picker_id }}-count" aria-live="polite">0</span>
+        </div>
+        <div class="game-picker-chips" id="{{ picker_id }}-chips" aria-live="polite"></div>
+    </div>
+
+    <div class="game-picker-hidden-inputs"></div>
+    {% if form.games.errors %}
+    <div class="invalid-feedback d-block mt-2">
+        {% for error in form.games.errors %}{{ error }}{% endfor %}
+    </div>
+    {% elif form.venue_games.errors %}
+    <div class="invalid-feedback d-block mt-2">
+        {% for error in form.venue_games.errors %}{{ error }}{% endfor %}
+    </div>
+    {% endif %}
+</div>

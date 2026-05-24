@@ -159,6 +159,31 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+def _read_bgg_api_key() -> str:
+    """BGG XML API token (required since 2025). Set BGG_API_KEY in .env."""
+    for name in (
+        "BGG_API_KEY",
+        "BGG_APPLICATION_TOKEN",
+        "BGG_TOKEN",
+        "BGG_AUTH_TOKEN",
+    ):
+        value = (os.environ.get(name) or "").strip().strip("'\"")
+        if value:
+            return value
+    return ""
+
+
+BGG_API_KEY = _read_bgg_api_key()
+# Backwards-compatible alias used in code/docs
+BGG_APPLICATION_TOKEN = BGG_API_KEY
+# Pool of BGG ids scanned for global rank (comma-separated in env, optional)
+_bgg_candidates = os.environ.get("BGG_RECOMMENDED_CANDIDATE_IDS", "")
+BGG_RECOMMENDED_CANDIDATE_IDS = (
+    [int(x.strip()) for x in _bgg_candidates.split(",") if x.strip()]
+    if _bgg_candidates
+    else None
+)
+
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [

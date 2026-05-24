@@ -692,26 +692,13 @@ class EventPricingTest(TestCase):
 
 class VenueGamesConstraintTest(TestCase):
     def setUp(self):
-        from games.models import BoardGame, Genre
+        from games.test_utils import create_test_boardgame
 
         self.user = make_user("organizer")
         self.client.login(username="organizer", password="password")
         self.venue = make_venue()
-        genre = Genre.objects.create(name="Strategy")
-        self.allowed = BoardGame.objects.create(
-            title="Allowed",
-            genre=genre,
-            min_players=2,
-            max_players=4,
-            release_date=timezone.now().date(),
-        )
-        self.other = BoardGame.objects.create(
-            title="Other",
-            genre=genre,
-            min_players=2,
-            max_players=4,
-            release_date=timezone.now().date(),
-        )
+        self.allowed = create_test_boardgame(bgg_id=100, title="Allowed")
+        self.other = create_test_boardgame(bgg_id=101, title="Other")
         self.venue.games.add(self.allowed)
 
     def test_cannot_select_games_outside_venue(self):
@@ -732,3 +719,53 @@ class VenueGamesConstraintTest(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Event.objects.filter(name="Bad Games Event").exists())
+
+
+class VenueDashboardEditLinksTest(TestCase):
+    def setUp(self):
+        self.staff_user = make_user("staff")
+        self.venue = make_venue()
+        self.venue.staff.add(self.staff_user)
+
+    def test_dashboard_shows_edit_venue_links(self):
+        self.client.login(username="staff", password="password")
+        response = self.client.get(reverse("venues:dashboard"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Edit venue")
+        self.assertContains(response, reverse("venues:edit_venue", args=[self.venue.slug]))
+
+
+class VenueReviewTests(TestCase):
+    def setUp(self):
+        self.user = make_user("reviewer")
+        self.venue = make_venue()
+
+    def test_venue_review_list_and_create(self):
+        from reviews.models import VenueReview
+
+        self.client.login(username="reviewer", password="password")
+        create_url = reverse("venues:venue_review_create", args=[self.venue.slug])
+        response = self.client.post(
+            create_url,
+            {
+                "title": "Great space",
+                "content": "Lots of games and friendly staff.",
+                "rating": 5,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(VenueReview.objects.filter(venue=self.venue).count(), 1)
+
+        list_url = reverse("venues:venue_review_list", args=[self.venue.slug])
+        response = self.client.get(list_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Great space")
+
+
+class NavbarTemplateTest(TestCase):
+    def test_navbar_excludes_reviews_link(self):
+        response = self.client.get(reverse("web:index"))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, reverse("reviews:reviews_list"))
+        self.assertNotContains(response, "dropdown-toggle")
+        self.assertContains(response, reverse("venues:venue_list"))

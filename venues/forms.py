@@ -1,6 +1,7 @@
 from django import forms
 
-from venues.models import VenueReservation
+from games.models import BoardGame
+from venues.models import Venue, VenueReservation
 
 
 class VenueSearchForm(forms.Form):
@@ -24,6 +25,53 @@ class VenueSearchForm(forms.Form):
             }
         ),
     )
+
+
+class VenueForm(forms.ModelForm):
+    games = forms.ModelMultipleChoiceField(
+        queryset=BoardGame.objects.all(),
+        required=False,
+        widget=forms.MultipleHiddenInput(),
+    )
+
+    class Meta:
+        model = Venue
+        fields = [
+            "name",
+            "description",
+            "address",
+            "city",
+            "phone",
+            "email",
+            "website",
+            "capacity",
+            "table_count",
+            "hourly_rate",
+            "opens_at",
+            "closes_at",
+            "is_active",
+            "image",
+        ]
+        widgets = {
+            "description": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "opens_at": forms.TimeInput(
+                attrs={"class": "form-control", "type": "time"}
+            ),
+            "closes_at": forms.TimeInput(
+                attrs={"class": "form-control", "type": "time"}
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields["games"].initial = self.instance.games.all()
+        if self.data:
+            posted_ids = self.data.getlist("games")
+            if posted_ids:
+                self.fields["games"].queryset = BoardGame.objects.filter(
+                    pk__in=posted_ids
+                )
 
 
 class ReservationDashboardForm(forms.Form):

@@ -54,7 +54,7 @@
                     <li class="list-group-item bg-transparent px-0 border-secondary">
                         <div class="d-flex flex-wrap align-items-baseline gap-2 mb-1">
                             {% for g in session.games.all %}
-                            <a href="{% url 'games:game_details' g.pk %}" class="fw-semibold text-decoration-none">{{ g.title }}</a>{% if not forloop.last %}<span class="text-muted">·</span>{% endif %}
+                            <a href="{{ g.bgg_url }}" target="_blank" rel="noopener noreferrer" class="fw-semibold text-decoration-none">{{ g.title }}</a>{% if not forloop.last %}<span class="text-muted">·</span>{% endif %}
                             {% empty %}
                             <span class="text-muted">No games linked</span>
                             {% endfor %}
@@ -112,7 +112,7 @@
                                         <a href="{{ review.get_absolute_url }}" class="fw-semibold text-decoration-none">{{ review.title }}</a>
                                         <span class="badge bg-warning text-dark ms-1">{{ review.rating }}/5</span>
                                         <p class="small text-muted mb-0">
-                                            <a href="{% url 'games:game_details' review.game.pk %}">{{ review.game.title }}</a>
+                                            <a href="{{ review.game.bgg_url }}" target="_blank" rel="noopener noreferrer">{{ review.game.title }}</a>
                                         </p>
                                     </div>
                                 </div>
@@ -126,7 +126,7 @@
                     <ul class="list-group list-group-flush">
                         {% for collection in collections %}
                             <li class="list-group-item bg-transparent px-0">
-                                <a href="{% url 'games:game_details' collection.game.pk %}" class="text-decoration-none">{{ collection.game.title }}</a>
+                                <a href="{{ collection.game.bgg_url }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none">{{ collection.game.title }}</a>
                                 <span class="text-muted small ms-2">({{ collection.get_status_display }})</span>
                             </li>
                         {% empty %}

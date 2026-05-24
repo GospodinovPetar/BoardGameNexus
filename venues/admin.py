@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 
 from venues.models import Venue, VenueReservation
 
@@ -19,8 +20,8 @@ class VenueAdmin(admin.ModelAdmin):
     list_filter = ("is_active", "city")
     search_fields = ("name", "address", "city", "email")
     prepopulated_fields = {"slug": ("name",)}
-    filter_horizontal = ("staff", "games")
-    readonly_fields = ("created_at", "updated_at")
+    filter_horizontal = ("staff",)
+    readonly_fields = ("created_at", "updated_at", "games_catalog_link")
     fieldsets = (
         (None, {"fields": ("name", "slug", "description", "is_active", "image")}),
         ("Location", {"fields": ("address", "city", "phone", "email", "website")}),
@@ -36,9 +37,18 @@ class VenueAdmin(admin.ModelAdmin):
                 ),
             },
         ),
-        ("Staff & games", {"fields": ("staff", "games")}),
+        ("Staff & games", {"fields": ("staff", "games_catalog_link")}),
         ("Meta", {"fields": ("created_at", "updated_at")}),
     )
+
+    @admin.display(description="Venue game catalog")
+    def games_catalog_link(self, obj):
+        if not obj.pk:
+            return "Save the venue first, then edit games on the site."
+        from django.urls import reverse
+
+        url = reverse("venues:edit_venue", kwargs={"slug": obj.slug})
+        return format_html('<a href="{}">Edit games on site</a>', url)
 
 
 @admin.register(VenueReservation)

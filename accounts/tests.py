@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from accounts.forms import RegisterForm
 from events.models import Event, EventRegistration
-from games.models import BoardGame, Genre
+from games.test_utils import create_test_boardgame
 from reviews.models import GameReview
 
 User = get_user_model()
@@ -124,14 +124,7 @@ class PublicProfilePlayedGamesOnlyTest(TestCase):
             password="StrongPass12345!",
         )
         viewer.groups.add(group)
-        genre = Genre.objects.create(name="Strategy")
-        game = BoardGame.objects.create(
-            title="Azul",
-            genre=genre,
-            min_players=2,
-            max_players=4,
-            release_date=timezone.now().date(),
-        )
+        game = create_test_boardgame(bgg_id=230802, title="Azul")
         organizer = User.objects.create_user(
             username="orgx",
             email="orgx@test.com",

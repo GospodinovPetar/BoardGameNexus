@@ -1,74 +1,139 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load crispy_forms_tags %}
+{% block title %}Partner Venues - BoardGame Nexus{% endblock %}
 
-{% block title %}Venues - BoardGame Nexus{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/venues.css' %}">
+{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row mb-5 justify-content-center">
-        <div class="col-lg-10 search-form-container">
-            <form method="GET" action="{% url 'venues:venue_list' %}" class="d-flex flex-column gap-3">
-                <div class="input-group flex-grow-1 align-items-center">
-                    <button class="btn btn-primary search-button" type="submit"><i class="bi bi-search"></i></button>
-                    {{ form.name }}
+<div class="venues-page">
+    <section class="venues-hero rounded-4 mb-4">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-8">
+                <p class="text-uppercase small text-info fw-semibold mb-2 letter-spacing">Partner venues</p>
+                <h1 class="display-6 fw-bold text-white mb-3">Find a place to play</h1>
+                <p class="lead text-white-75 mb-0">
+                    Browse board game cafés and partner spaces - see locations, reviews, available games, and book your next event.
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                {% if total_venue_count %}
+                <div class="venues-hero-stat">
+                    <span class="venues-hero-stat-value">{{ total_venue_count }}</span>
+                    <span class="venues-hero-stat-label">active venues</span>
                 </div>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        {{ form.city|as_crispy_field }}
+                {% endif %}
+                {% if user.is_superuser %}
+                <a href="{% url 'venues:add_venue' %}" class="btn btn-outline-success mt-3">
+                    <i class="bi bi-plus-circle me-1"></i>Add venue
+                </a>
+                {% else %}
+                    {% for group in user.groups.all %}
+                        {% if group.name == 'Moderators' %}
+                <a href="{% url 'venues:add_venue' %}" class="btn btn-outline-success mt-3">
+                    <i class="bi bi-plus-circle me-1"></i>Add venue
+                </a>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <div class="card bg-secondary-subtle border-secondary mb-4">
+        <div class="card-body">
+            <form method="GET" action="{% url 'venues:venue_list' %}" class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label small text-muted mb-1" for="{{ form.name.id_for_label }}">Venue name</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary"><i class="bi bi-search"></i></span>
+                        {{ form.name }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted mb-1" for="{{ form.city.id_for_label }}">City</label>
+                    {{ form.city }}
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted mb-1 d-none d-md-block" aria-hidden="true">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Search</button>
                     </div>
                 </div>
             </form>
         </div>
     </div>
 
-    <h2 class="mb-4 text-center text-white-75">Partner Venues</h2>
-    <p class="text-center text-muted mb-4">Registered venues where you can host your next board game event.</p>
-
     {% if venues %}
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
         {% for venue in venues %}
         <div class="col">
-            <div class="card event-card h-100">
-                {% if venue.image %}
-                <img src="{{ venue.image.url }}" class="card-img-top" alt="{{ venue.name }}" style="height: 180px; object-fit: cover;">
-                {% else %}
-                <div class="bg-dark d-flex align-items-center justify-content-center" style="height: 180px;">
-                    <i class="bi bi-shop display-4 text-secondary"></i>
-                </div>
-                {% endif %}
-                <div class="card-body d-flex flex-column text-center">
-                    <h5 class="event-card-title mb-2">{{ venue.name }}</h5>
-                    <div class="event-card-info flex-grow-1 mb-3 text-start">
-                        <span><i class="bi bi-geo-alt"></i> {{ venue.full_address }}</span>
-                        <span><i class="bi bi-people"></i> {{ venue.table_count }} tables</span>
-                        <span><i class="bi bi-clock"></i> {{ venue.working_hours_display }}</span>
+            <article class="card venue-card h-100 border-secondary overflow-hidden">
+                <div class="venue-card-media position-relative">
+                    {% if venue.image %}
+                    <img src="{{ venue.image.url }}" class="venue-card-img" alt="{{ venue.name }}">
+                    {% else %}
+                    <div class="venue-card-img venue-card-img-placeholder d-flex align-items-center justify-content-center">
+                        <i class="bi bi-shop display-4 text-secondary"></i>
                     </div>
-                    <div class="mt-auto d-flex justify-content-around gap-2">
-                        <a href="{% url 'venues:venue_detail' venue.slug %}" class="btn btn-event-details btn-sm flex-fill">
-                            <i class="bi bi-info-circle me-1"></i> Details
+                    {% endif %}
+                    <div class="venue-card-overlay p-3">
+                        <h2 class="h5 text-white fw-bold mb-0">{{ venue.name }}</h2>
+                        <p class="small text-white-75 mb-0"><i class="bi bi-geo-alt me-1"></i>{{ venue.city }}</p>
+                    </div>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <p class="small text-muted mb-3 venue-card-address">{{ venue.full_address }}</p>
+                    {% if venue.description %}
+                    <p class="small text-secondary mb-3 venue-card-excerpt">{{ venue.description|truncatewords:24 }}</p>
+                    {% endif %}
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="badge bg-dark border border-secondary">
+                            <i class="bi bi-grid-3x3-gap me-1"></i>{{ venue.table_count }} tables
+                        </span>
+                        <span class="badge bg-dark border border-secondary">
+                            <i class="bi bi-clock me-1"></i>{{ venue.working_hours_display }}
+                        </span>
+                        {% if venue.game_count %}
+                        <span class="badge bg-dark border border-secondary">
+                            <i class="bi bi-dice-5 me-1"></i>{{ venue.game_count }} games
+                        </span>
+                        {% endif %}
+                        {% if venue.review_count %}
+                        <span class="badge bg-warning text-dark">
+                            <i class="bi bi-star-fill me-1"></i>{{ venue.review_avg|floatformat:1 }} ({{ venue.review_count }})
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="mt-auto d-grid gap-2">
+                        <a href="{% url 'venues:venue_detail' venue.slug %}" class="btn btn-event-details">
+                            <i class="bi bi-info-circle me-1"></i>View venue
                         </a>
                         {% if user.is_authenticated %}
-                        <a href="{% url 'events:add_event' %}?venue_id={{ venue.pk }}" class="btn btn-join-event btn-sm flex-fill">
-                            <i class="bi bi-calendar-plus me-1"></i> Book
+                        <a href="{% url 'events:add_event' %}?venue_id={{ venue.pk }}" class="btn btn-join-event btn-sm">
+                            <i class="bi bi-calendar-plus me-1"></i>Book an event
                         </a>
                         {% endif %}
                     </div>
                 </div>
-            </div>
+            </article>
         </div>
         {% endfor %}
     </div>
     {% else %}
-    <div class="text-center my-5 p-4 empty-events-message">
+    <div class="text-center my-5 p-5 venues-empty rounded-4">
         <i class="bi bi-shop display-1 text-muted mb-3"></i>
         <h3 class="text-white-75">No venues found</h3>
-        <p class="text-muted">Try adjusting your search filters.</p>
+        <p class="text-muted mb-4">Try adjusting your search filters.</p>
+        <a href="{% url 'venues:venue_list' %}" class="btn btn-outline-light">Clear filters</a>
     </div>
     {% endif %}
 
     {% if page_obj.has_other_pages %}
-    {% include '_pagination.html' with page_obj=page_obj %}
+    <div class="mt-4">
+        {% include '_pagination.html' with page_obj=page_obj %}
+    </div>
     {% endif %}
 </div>
 {% endblock %}

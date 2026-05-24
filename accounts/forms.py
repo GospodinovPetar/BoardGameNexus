@@ -1,4 +1,5 @@
 from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Field, Layout, Submit
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.core.exceptions import ValidationError
@@ -30,6 +31,7 @@ class RegisterForm(UserCreationForm):
         self.fields["password2"].widget.attrs["class"] = "form-control"
         self.helper = FormHelper()
         self.helper.form_tag = False
+        self.helper.disable_csrf = True
 
     def clean_email(self):
         email = self.cleaned_data["email"]
@@ -45,6 +47,12 @@ class LoginForm(AuthenticationForm):
         self.fields["password"].widget.attrs["class"] = "form-control"
         self.helper = FormHelper()
         self.helper.form_tag = False
+        self.helper.disable_csrf = True
+        self.helper.layout = Layout(
+            Field("username"),
+            Field("password"),
+            Submit("submit", "Log in", css_class="w-100 mt-3"),
+        )
 
 
 class EditProfileForm(forms.ModelForm):

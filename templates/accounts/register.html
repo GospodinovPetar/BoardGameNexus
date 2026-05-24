@@ -7,7 +7,7 @@
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">
         <h1 class="h3 mb-3">Create an account</h1>
-        <form method="post" novalidate>
+        <form method="post">
             {% csrf_token %}
             {% crispy form %}
             <div class="d-grid gap-2 mt-3">

@@ -4,7 +4,7 @@ from django.db import IntegrityError
 from django.test import TestCase
 from django.urls import reverse
 
-from games.models import BoardGame, Genre
+from games.test_utils import create_test_boardgame
 from reviews.forms import ReviewForm
 from reviews.models import GameReview
 
@@ -18,13 +18,7 @@ class ReviewsTests(TestCase):
         group = Group.objects.get_or_create(name="Moderators")
         self.moderators_group = group[0]
 
-        self.genre = Genre.objects.create(name="Eurogame")
-        self.game = BoardGame.objects.create(
-            title="Brass: Birmingham",
-            genre=self.genre,
-            min_players=2,
-            max_players=4,
-        )
+        self.game = create_test_boardgame(bgg_id=224517, title="Brass: Birmingham")
 
     def test_review_str_contains_author_and_game_title(self):
         user = User.objects.create_user(

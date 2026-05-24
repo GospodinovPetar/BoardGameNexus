@@ -73,7 +73,17 @@ class EventSearchForm(forms.Form):
         queryset=BoardGame.objects.all(),
         required=False,
         label="Games",
-        widget=forms.CheckboxSelectMultiple,
+        widget=forms.SelectMultiple(attrs={"class": "d-none"}),
+    )
+    game_title = forms.CharField(
+        required=False,
+        label="Game title",
+        widget=forms.TextInput(
+            attrs={
+                "placeholder": "Filter by game title…",
+                "class": "form-control",
+            }
+        ),
     )
 
     def __init__(self, *args, **kwargs):
@@ -187,7 +197,7 @@ class EventForm(forms.ModelForm):
             "description": forms.Textarea(
                 attrs={"placeholder": "Tell us more about the epic event!"}
             ),
-            "games": forms.CheckboxSelectMultiple(),
+            "games": forms.MultipleHiddenInput(),
         }
 
     def __init__(self, *args, **kwargs):
@@ -215,6 +225,13 @@ class EventForm(forms.ModelForm):
             self._init_venue_time_slots_from_instance()
         else:
             self.fields["games"].queryset = BoardGame.objects.all().order_by("title")
+        if self.data:
+            posted_ids = self.data.getlist("games")
+            if posted_ids:
+                self.fields["games"].queryset = BoardGame.objects.filter(
+                    pk__in=posted_ids
+                ).order_by("title")
+        if not venue:
             self.fields["event_date"].required = False
             self.fields["start_time"].required = False
             self.fields["end_time_field"].required = False
@@ -350,7 +367,7 @@ class EventForm(forms.ModelForm):
                 self.add_error("venue", "This venue is not accepting bookings.")
             cleaned_data["location"] = venue.display_location()
             venue_game_ids = set(venue.games.values_list("pk", flat=True))
-            if venue_game_ids and games:
+            if games:
                 invalid = [g for g in games if g.pk not in venue_game_ids]
                 if invalid:
                     self.add_error(

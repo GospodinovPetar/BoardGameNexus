@@ -5,58 +5,33 @@ from django.core.validators import (
 )
 
 
-class Genre(models.Model):
-    name = models.CharField(
-        max_length=100,
-        unique=True,
-    )
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        ordering = ["name"]
+def bgg_thing_url(bgg_id: int) -> str:
+    return f"https://boardgamegeek.com/boardgame/{bgg_id}"
 
 
 class BoardGame(models.Model):
-    title = models.CharField(
-        max_length=200,
-        unique=True,
-    )
-    genre = models.ForeignKey(
-        to=Genre,
-        on_delete=models.CASCADE,
-    )
-    release_date = models.DateField(
-        null=True,
-        blank=True,
-    )
+    bgg_id = models.PositiveIntegerField(unique=True, db_index=True)
+    title = models.CharField(max_length=300)
+    year_published = models.PositiveSmallIntegerField(null=True, blank=True)
     min_players = models.IntegerField(
-        validators=[
-            MinValueValidator(1),
-        ]
+        validators=[MinValueValidator(1)],
+        default=1,
     )
     max_players = models.IntegerField(
-        validators=[
-            MaxValueValidator(100),
-        ]
+        validators=[MaxValueValidator(100)],
+        default=4,
     )
-    description = models.TextField(
-        blank=True,
-        null=True,
-    )
-    image_url = models.URLField(
-        null=True,
-        blank=True,
-    )
-    image = models.ImageField(
-        upload_to="games/",
-        blank=True,
-        null=True,
-    )
+    description = models.TextField(blank=True, default="")
+    image_url = models.URLField(max_length=500, blank=True, default="")
+    bgg_url = models.URLField(max_length=500, blank=True, default="")
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        if not self.bgg_url and self.bgg_id:
+            self.bgg_url = bgg_thing_url(self.bgg_id)
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ["title"]

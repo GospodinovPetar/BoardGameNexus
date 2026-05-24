@@ -7,7 +7,8 @@ from django.utils import timezone
 from events.models import Event, EventRegistration
 from events.visibility import can_view_event, event_is_cancelled, filter_public_events
 from events.views import _apply_no_show_penalties, get_suggested_events
-from games.models import BoardGame, Genre
+from games.models import BoardGame
+from games.test_utils import create_test_boardgame
 from venues.models import Venue, VenueReservation
 
 User = get_user_model()
@@ -199,14 +200,7 @@ class GetSuggestedEventsTest(TestCase):
     def setUp(self):
         self.organizer = make_user("sug_org")
         self.user = make_user("sug_player")
-        self.genre = Genre.objects.create(name="Strategy")
-        self.game = BoardGame.objects.create(
-            title="Catan",
-            genre=self.genre,
-            min_players=2,
-            max_players=4,
-            release_date=timezone.now().date(),
-        )
+        self.game = create_test_boardgame(bgg_id=13, title="Catan")
 
     def _make_past_event_with_registration(self):
         past = make_event(organizer=self.organizer, days_ahead=-20, name="Past Meetup")
@@ -494,14 +488,7 @@ class EventCRUDPermissionsTest(TestCase):
 
     def test_create_event_sets_organizer(self):
         self.client.login(username="other", password="password")
-        genre = Genre.objects.create(name="Strategy")
-        game = BoardGame.objects.create(
-            title="Chess",
-            genre=genre,
-            min_players=2,
-            max_players=2,
-            release_date=timezone.now().date(),
-        )
+        game = create_test_boardgame(bgg_id=171, title="Chess", min_players=2, max_players=2)
         response = self.client.post(
             reverse("events:add_event"),
             {

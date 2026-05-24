@@ -163,26 +163,36 @@
             <div class="row row-cols-1 row-cols-sm-2 g-3 mb-4">
                 {% for game in event.games.all %}
                 <div class="col">
-                    <a href="{% url 'games:game_details' game.pk %}" class="text-decoration-none d-block h-100">
-                        <div class="event-game-card d-flex align-items-stretch h-100">
-                            {% if game.image %}
-                                <img src="{{ game.image.url }}" alt="{{ game.title }}" class="event-game-thumb">
-                            {% elif game.image_url %}
+                    <div class="event-game-card d-flex align-items-stretch h-100">
+                        <a href="{{ game.bgg_url }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none d-flex align-items-stretch flex-grow-1">
+                            {% if game.image_url %}
                                 <img src="{{ game.image_url }}" alt="{{ game.title }}" class="event-game-thumb">
                             {% else %}
                                 <img src="{% static 'images/placeholder_game.png' %}" alt="{{ game.title }}" class="event-game-thumb">
                             {% endif %}
                             <div class="d-flex flex-column justify-content-center px-3 py-2 gap-1">
                                 <span class="fw-semibold text-white lh-sm">{{ game.title }}</span>
+                                {% if game.year_published %}
                                 <small class="text-muted">
-                                    <i class="bi bi-tag-fill me-1"></i>{{ game.genre.name }}
+                                    <i class="bi bi-calendar-event me-1"></i>{{ game.year_published }}
                                 </small>
+                                {% endif %}
                                 <small class="text-muted">
                                     <i class="bi bi-people-fill me-1"></i>{{ game.min_players }}–{{ game.max_players }} players
                                 </small>
+                                <small class="text-info">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i>View on BGG
+                                </small>
                             </div>
+                        </a>
+                        {% if user.is_authenticated %}
+                        <div class="d-flex align-items-center px-2 border-start border-secondary">
+                            <a href="{% url 'reviews:create_review' game.pk %}" class="btn btn-sm btn-outline-warning text-nowrap" title="Write a review">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
                         </div>
-                    </a>
+                        {% endif %}
+                    </div>
                 </div>
                 {% endfor %}
             </div>

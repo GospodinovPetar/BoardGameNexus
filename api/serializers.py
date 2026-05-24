@@ -2,42 +2,58 @@ from rest_framework import serializers
 
 from accounts.models import CustomUser, UserProfile
 from events.models import Event
-from games.models import BoardGame, Genre
+from games.models import BoardGame
 from reviews.models import GameReview, UserCollection
 
 
-class GenreSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Genre
-        fields = ["id", "name"]
-
-
 class BoardGameSerializer(serializers.ModelSerializer):
-    genre = serializers.PrimaryKeyRelatedField(queryset=Genre.objects.all())
-    genre_name = serializers.SerializerMethodField()
     review_avg = serializers.SerializerMethodField()
 
     class Meta:
         model = BoardGame
         fields = [
             "id",
+            "bgg_id",
             "title",
-            "genre",
-            "genre_name",
-            "release_date",
+            "year_published",
             "min_players",
             "max_players",
             "description",
             "image_url",
+            "bgg_url",
             "review_avg",
         ]
-        read_only_fields = ["genre_name", "review_avg"]
-
-    def get_genre_name(self, obj):
-        return obj.genre.name
+        read_only_fields = fields
 
     def get_review_avg(self, obj):
-        return round(float(obj.review_avg), 2)
+        avg = getattr(obj, "review_avg", None)
+        if avg is None:
+            return 0.0
+        return round(float(avg), 2)
+
+
+class BoardGameSearchResultSerializer(serializers.Serializer):
+    bgg_id = serializers.IntegerField()
+    title = serializers.CharField()
+    year_published = serializers.IntegerField(allow_null=True, required=False)
+
+
+class BoardGameRecommendedSerializer(serializers.Serializer):
+    bgg_id = serializers.IntegerField()
+    title = serializers.CharField()
+    year_published = serializers.IntegerField(allow_null=True, required=False)
+    image_url = serializers.CharField(required=False, allow_blank=True)
+    bgg_url = serializers.URLField(required=False, allow_blank=True)
+    bgg_rank = serializers.IntegerField(allow_null=True, required=False)
+    bgg_rating = serializers.FloatField(allow_null=True, required=False)
+    local_id = serializers.IntegerField(allow_null=True, required=False)
+
+
+class BoardGameEnsureSerializer(serializers.Serializer):
+    bgg_ids = serializers.ListField(
+        child=serializers.IntegerField(min_value=1),
+        allow_empty=False,
+    )
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -80,66 +96,54 @@ class EventSerializer(serializers.ModelSerializer):
         return obj.has_free_spots()
 
     def get_google_maps_url(self, obj):
-        return obj.google_maps_url
+        return obj.google_maps_url()
 
     def get_venue_total_price(self, obj):
-        total = obj.venue_total_price
-        return float(total) if total is not None else None
+        return obj.venue_total_price()
 
     def get_venue_price_per_person(self, obj):
-        per_person = obj.venue_price_per_person
-        return float(per_person) if per_person is not None else None
+        return obj.venue_price_per_person()
 
 
 class GameReviewSerializer(serializers.ModelSerializer):
-    game = serializers.PrimaryKeyRelatedField(queryset=BoardGame.objects.all())
-    game_title = serializers.SerializerMethodField()
-    author_username = serializers.SerializerMethodField()
+    author_username = serializers.CharField(source="author.username", read_only=True)
+    game_title = serializers.CharField(source="game.title", read_only=True)
 
     class Meta:
         model = GameReview
         fields = [
             "id",
             "game",
-            "game_title",
+            "author",
             "author_username",
+            "game_title",
             "title",
             "content",
             "rating",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["game_title", "author_username", "created_at", "updated_at"]
-
-    def get_game_title(self, obj):
-        return obj.game.title
-
-    def get_author_username(self, obj):
-        return obj.author.username
+        read_only_fields = ["author", "author_username", "game_title", "created_at", "updated_at"]
 
 
 class UserCollectionSerializer(serializers.ModelSerializer):
-    game = serializers.PrimaryKeyRelatedField(queryset=BoardGame.objects.all())
-    game_title = serializers.SerializerMethodField()
+    game_title = serializers.CharField(source="game.title", read_only=True)
 
     class Meta:
         model = UserCollection
-        fields = ["id", "game", "game_title", "status", "notes", "added_at"]
+        fields = [
+            "id",
+            "game",
+            "game_title",
+            "status",
+            "notes",
+            "added_at",
+        ]
         read_only_fields = ["game_title", "added_at"]
-
-    def get_game_title(self, obj):
-        return obj.game.title
-
-
-class UserProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserProfile
-        fields = ["favourite_genre", "games_played", "location"]
-        read_only_fields = ["games_played"]
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
-    profile = UserProfileSerializer(read_only=True)
+    profile = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
@@ -149,8 +153,17 @@ class CustomUserSerializer(serializers.ModelSerializer):
             "email",
             "first_name",
             "last_name",
-            "bio",
-            "date_of_birth",
             "profile",
         ]
-        read_only_fields = ["id", "username"]
+        read_only_fields = ["username"]
+
+    def get_profile(self, obj):
+        try:
+            profile = obj.profile
+        except UserProfile.DoesNotExist:
+            return None
+        return {
+            "bio": profile.bio,
+            "favourite_genre": profile.favourite_genre,
+            "games_played": profile.games_played,
+        }

@@ -138,7 +138,8 @@
                 {{ form.max_players|as_crispy_field }}
             </div>
             {{ form.description|as_crispy_field }}
-            {{ form.games|as_crispy_field }}
+            {% include "games/_recommended_games_picker.html" %}
+            {% include "games/_game_picker.html" with picker_id="event-games-picker" picker_mode=game_picker_mode input_name="games" initial_games_json=initial_games_json allowed_games_json=allowed_games_json picker_label="Games to play" %}
 
             <div class="d-flex justify-content-between mt-4">
                 <a href="{{ cancel_url }}" class="btn btn-secondary">Cancel</a>

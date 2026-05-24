@@ -8,7 +8,9 @@
         <nav aria-label="breadcrumb" class="mb-3">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="{% url 'reviews:reviews_list' %}">Reviews</a></li>
-                <li class="breadcrumb-item"><a href="{% url 'games:game_details' review.game.pk %}">{{ review.game.title }}</a></li>
+                <li class="breadcrumb-item">
+                    <a href="{{ review.game.bgg_url }}" target="_blank" rel="noopener noreferrer">{{ review.game.title }}</a>
+                </li>
                 <li class="breadcrumb-item active" aria-current="page">{{ review.title|truncatewords:6 }}</li>
             </ol>
         </nav>
@@ -26,7 +28,7 @@
                             </div>
                             <p class="mb-0 small">
                                 <i class="bi bi-dice-5 me-1"></i>
-                                <a href="{% url 'games:game_details' review.game.pk %}">{{ review.game.title }}</a>
+                                <a href="{{ review.game.bgg_url }}" target="_blank" rel="noopener noreferrer">{{ review.game.title }}</a>
                             </p>
                         </div>
                     </div>
@@ -55,8 +57,8 @@
         {% endif %}
 
         <div class="mt-4">
-            <a href="{% url 'games:game_details' review.game.pk %}" class="btn btn-secondary">
-                <i class="bi bi-arrow-left me-1"></i>Back to game
+            <a href="{% url 'reviews:reviews_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Back to reviews
             </a>
         </div>
     </div>

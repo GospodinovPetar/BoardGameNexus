@@ -1,0 +1,87 @@
+.venues-hero {
+    padding: 2rem 2.25rem;
+    background: linear-gradient(135deg, rgba(var(--bs-primary-rgb), 0.15), rgba(var(--bs-info-rgb), 0.08));
+    border: 1px solid var(--bs-gray-800);
+}
+
+.venues-hero .letter-spacing {
+    letter-spacing: 0.12em;
+}
+
+.venues-hero-stat {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-end;
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--bs-gray-700);
+}
+
+.venues-hero-stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--bs-info);
+}
+
+.venues-hero-stat-label {
+    font-size: 0.85rem;
+    color: var(--bs-secondary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.venue-card {
+    background: var(--bs-gray-900);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.venue-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.35);
+}
+
+.venue-card-media {
+    background: var(--bs-gray-800);
+}
+
+.venue-card-img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+}
+
+.venue-card-img-placeholder {
+    height: 200px;
+    background: var(--bs-gray-800);
+}
+
+.venue-card-overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.85));
+}
+
+.venue-card-excerpt {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.venues-empty {
+    border: 1px dashed var(--bs-gray-700);
+    background: rgba(var(--bs-secondary-rgb), 0.15);
+}
+
+.venues-page .card-body form.row.align-items-end > [class*="col-"] {
+    margin-bottom: 0;
+}
+
+.game-picker-panel {
+    scroll-margin-top: 5rem;
+}
